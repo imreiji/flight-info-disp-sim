@@ -49,8 +49,9 @@
     const arr = F.fmtTime(f.arr, c24);
     let cells;
     if (d.pill === 'delayed' && f.est) {
-      cells = cell('takeoff', 'Est. departure', F.fmtTime(f.est, c24)) +
-              cell('clock', 'Orig. departure', F.fmtTime(f.sched, c24), 'struck') +
+      // Delayed: Orig. departure takes Boarding time's slot.
+      cells = cell('clock', 'Orig. departure', F.fmtTime(f.sched, c24), 'struck') +
+              cell('takeoff', 'Est. departure', F.fmtTime(f.est, c24)) +
               cell('land', 'Est. arrival', arr);
     } else {
       cells = cell('clock', 'Boarding time', F.fmtTime(d.boardLocal, c24)) +
