@@ -84,12 +84,36 @@ window.FIDS = window.FIDS || {};
     },
   };
 
+  // Gates are written differently by different sources ("C107", "107", "Gate C 107"): compare loosely.
+  const normGate = (g) => String(g || '').toUpperCase().replace(/^GATE\s*/, '').replace(/[^A-Z0-9]/g, '');
+  const sameGate = (a, b) => {
+    a = normGate(a); b = normGate(b);
+    if (!a || !b) return false;
+    return a === b || a.replace(/^[A-Z]+/, '') === b || b.replace(/^[A-Z]+/, '') === a;
+  };
+
   // The next departure (same airline) from the same gate after the current flight, from a departures list.
   F.pickNext = function (s, list) {
     const f = s.flight, dep = f.est || f.sched;
-    const gate = (f.gate || '').toUpperCase();
-    return list.find((n) => n.gate.toUpperCase() === gate && (n.est || n.sched) > dep &&
+    return list.find((n) => sameGate(n.gate, f.gate) && (n.est || n.sched) > dep &&
       !(n.airline === f.airline && n.number === f.number)) || null;
+  };
+
+  // Look up and apply the next departure from this gate. Returns a short message saying what happened.
+  F.lookupNext = async function (s, key) {
+    const f = s.flight;
+    if (!key) return 'Next departure needs an AeroDataBox key (Flight data \u2192 API key).';
+    if (!f.gate || !f.originCode || !f.sched) return 'Next departure needs the gate, origin and departure time.';
+    const dep = f.est || f.sched;
+    const list = await F.api.byAirport(key, f.originCode, dep, F.shiftLocal(dep, 11 * 60), { airline: f.airline });
+    const n = F.pickNext(s, list);
+    if (!n) {
+      const gated = list.filter((x) => x.gate).length;
+      return 'No later ' + f.airline + ' departure at gate ' + f.gate + ' in the next 11 hours (' + list.length + ' ' + f.airline +
+        ' departures found, ' + gated + ' with a gate assigned yet).';
+    }
+    F.applyNext(s, n);
+    return 'Next departure: ' + n.airline + n.number + ' to ' + n.destLabel + ' at ' + F.fmtTime(n.est || n.sched) + '.';
   };
 
   F.applyNext = function (s, n) {
@@ -108,11 +132,7 @@ window.FIDS = window.FIDS || {};
     if (!legs.length) throw new Error('No flight found for ' + src.flight + ' on ' + src.date);
     const leg = legs.find((l) => l.originCode === (src.airport || '').toUpperCase()) || legs[0];
     F.applyFlight(s, leg);
-    if (src.lookupNext && s.flight.gate && s.flight.originCode) {
-      const dep = s.flight.est || s.flight.sched;
-      const list = await F.api.byAirport(key, s.flight.originCode, dep, F.shiftLocal(dep, 11 * 60), { airline: s.flight.airline });
-      F.applyNext(s, F.pickNext(s, list));
-    }
+    if (src.lookupNext) await F.lookupNext(s, key);
     return s;
   };
 

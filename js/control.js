@@ -205,7 +205,7 @@
         const match = legs.find((l) => l.originCode === (src.airport || '').toUpperCase());
         if (legs.length > 1 && !match) { showResults(legs); return msg('Multiple legs: pick one.'); }
         pick(match || legs[0]);
-        if (src.lookupNext) { await F.refreshFlight(state, key); commit(); fillForm(); }
+        lookupNextDeparture();
       } else {
         const ap = src.airport.toUpperCase();
         const off = state.flight.originCode === ap ? state.flight.utcOffsetMin : -new Date().getTimezoneOffset();
@@ -225,17 +225,16 @@
 
   // Next departure from this gate: United's site has no by-gate list, so this uses AeroDataBox (key needed).
   async function lookupNextDeparture() {
-    const key = F.getKey(), f = state.flight;
-    if (!key || !f.gate || !f.originCode) return;
+    const el = $('nextMsg');
+    el.textContent = 'Looking up the next departure from gate ' + (state.flight.gate || '?') + '...'; el.className = 'msg';
     try {
-      const dep = f.est || f.sched;
-      const list = await F.api.byAirport(key, f.originCode, dep, F.shiftLocal(dep, 11 * 60), { airline: f.airline });
-      F.applyNext(state, F.pickNext(state, list));
+      el.textContent = await F.lookupNext(state, F.getKey());
       commit(); fillForm();
     } catch (e) {
-      unitedMsg('Next departure lookup failed: ' + e.message, true);
+      el.textContent = 'Next departure lookup failed: ' + e.message; el.className = 'msg err';
     }
   }
+  $('nextBtn').onclick = lookupNextDeparture;
 
   // ---- United bookmarklet ----
   function unitedMsg(t, err) { $('unitedMsg').textContent = t; $('unitedMsg').className = 'msg' + (err ? ' err' : ''); }

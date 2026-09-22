@@ -37,7 +37,7 @@
         </label>
         <label>Boarding time (min before dep)<input type="number" min="0" data-path="boarding.leadMin"></label>
         <label>Minutes per group (auto)<input type="number" min="1" data-path="boarding.groupEveryMin"></label>
-        <label>Door closes (min before dep)<input type="number" min="0" data-path="boarding.closeMin"></label>
+        <label>Boarding closes (min before dep)<input type="number" min="0" data-path="boarding.closeMin"></label>
         <label>Countdown window (min)<input type="number" min="0" data-path="boarding.countdownMin"></label>
       </div>
       <p class="muted">In <b>Auto</b> the right panel follows the clock: promos, then "Boarding in N minutes", "Boarding soon", each group in turn, final boarding, door closed.</p>
@@ -186,7 +186,11 @@
         <label>Flight<input data-path="next.flight" placeholder="UA562"></label>
         <label>Departs<input type="datetime-local" data-path="next.time"></label>
         <label>Status<input data-path="next.status" list="nextStatuses"></label>
-        <datalist id="nextStatuses"><option>On Time</option><option>Delayed</option><option>Cancelled</option></datalist>
+        <datalist id="nextStatuses"><option>On Time</option><option>Delayed</option></datalist>
+      </div>
+      <div class="row">
+        <button id="nextBtn">Look up next departure from this gate</button>
+        <span id="nextMsg" class="msg"></span>
       </div>
     </section>
 

@@ -70,7 +70,7 @@ window.FIDS = window.FIDS || {};
         pill: 'auto',
         leadMin: 30,             // boarding time = departure - leadMin
         groupEveryMin: 4,
-        closeMin: 10,            // door closes this long before departure
+        closeMin: 15,            // boarding closes this long before departure
         countdownMin: 45,        // show "Boarding in N minutes" inside this window
       },
       amenities: {
