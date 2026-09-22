@@ -100,6 +100,15 @@
       <p class="muted">Click it again any time to refresh. The data goes straight from your united.com tab to this page in your browser; passenger names are never uploaded and are left out of shared snapshot links.
         <a href="status.html" target="_blank" rel="noopener">Open flight status page &rarr;</a></p>
       <div class="row"><span id="unitedMsg" class="msg"></span></div>
+      <div class="row">
+        <label class="inline"><input type="checkbox" data-path="feed.enabled"> Follow a gate with the local feed</label>
+        <label>Feed address<input data-path="feed.url" placeholder="http://127.0.0.1:8788"></label>
+        <label>Poll every (s)<input type="number" min="15" class="tiny" data-path="feed.sec"></label>
+        <button id="feedBtn">Fetch now</button>
+      </div>
+      <p class="muted">Optional: <code>python server/gate_feed.py --airport EWR --gate C107</code> keeps one gate up to date on
+        its own and rolls over to the next flight after departure. Without it, use the bookmark steps above.</p>
+      <div class="row"><span id="feedMsg" class="msg"></span></div>
       <div id="fvPick" hidden>
         <div class="row">
           <label class="inline"><b id="fvPickTitle"></b></label>
@@ -229,6 +238,7 @@
   <script src="js/airports.js"></script>
   <script src="js/api.js"></script>
   <script src="js/united.js"></script>
+  <script src="js/feed.js"></script>
   <script src="js/control.js"></script>
 </body>
 </html>

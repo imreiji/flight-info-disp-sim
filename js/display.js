@@ -276,6 +276,15 @@
     else document.documentElement.requestFullscreen().catch(() => {});
   }
 
+  F.startFeedPolling(() => state, () => {
+    F.save(state);
+    $('err').hidden = true;
+    render();
+  }, (m) => {
+    $('err').textContent = 'Local feed: ' + m;
+    $('err').hidden = false;
+  });
+
   F.onChange((s) => {
     if (F.isSnapshot()) return;
     state = s;

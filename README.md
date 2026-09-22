@@ -56,6 +56,32 @@ departures on [FlightView](https://www.flightview.com/). Click the same bookmark
 
 A tab opened by the bookmark hands its update to an already-open control page and closes itself.
 
+## Optional: follow a gate automatically (local feed)
+
+`server/gate_feed.py` keeps one gate up to date without any clicking, and rolls over to the next flight once one departs.
+Each cycle it starts your Chrome off-screen, reads the airport's departures from FlightView's page, picks the flight
+currently using the gate, then reads that flight's details from united.com, and serves the result on localhost.
+
+```sh
+pip install playwright
+python server/gate_feed.py --airport EWR --gate C107        # --every 120 --airline UA --show
+```
+
+On the control page tick **Follow a gate with the local feed**. The display and status pages poll it, so a screen left
+running follows the gate on its own. Same caveats as the bookmark: personal use, breaks when either site changes.
+Passenger names never leave your machine.
+
+## Wallpaper Engine
+
+`wallpaper/` is a web wallpaper: copy the folder into Wallpaper Engine's `myprojects` directory (or open it from the
+editor) and it shows the display full-screen behind your desktop. Its **Display link** setting takes any URL:
+
+- the plain display URL, which stays live if the local feed is running;
+- or a snapshot link from **Copy link for another device**, which pins one flight's settings.
+
+Wallpaper Engine has its own browser storage, so the control page can't push changes into it directly; use the feed or a
+new snapshot link.
+
 ## Flight status page
 
 `status.html` shows the current flight like an airline status page: delay banner, departure/arrival with gates, aircraft and

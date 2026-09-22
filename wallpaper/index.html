@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Gate Display Wallpaper</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+    iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+    #hint { position: absolute; inset: auto 0 0 0; color: #9aa4b8; background: #10131a;
+            font: 14px/1.5 system-ui, sans-serif; padding: 10px 14px; text-align: center; }
+  </style>
+</head>
+<body>
+  <iframe id="screen" title="Gate display"></iframe>
+  <div id="hint" hidden></div>
+
+  <script>
+    // Wallpaper Engine passes the settings from project.json. The "link" property is the display URL:
+    // paste a snapshot link from the control page ("Copy link for another device") to fix the flight,
+    // or leave the plain display URL and run server/gate_feed.py to keep it live.
+    var DEFAULT = 'https://yanjz124.github.io/flight-info-disp-sim/index.html';
+    var screenEl = document.getElementById('screen');
+    var hint = document.getElementById('hint');
+
+    function show(url) {
+      url = (url || '').trim() || DEFAULT;
+      if (screenEl.src !== url) screenEl.src = url;
+      hint.hidden = true;
+    }
+    show(DEFAULT);
+
+    window.wallpaperPropertyListener = {
+      applyUserProperties: function (p) {
+        if (p.link && typeof p.link.value === 'string') show(p.link.value);
+        if (p.reload && p.reload.value) screenEl.src = screenEl.src;   // button: reload now
+      },
+    };
+
+    // If the page can't load (offline at boot), retry every 30 s.
+    setInterval(function () {
+      if (!navigator.onLine) { hint.hidden = false; hint.textContent = 'Offline, retrying...'; return; }
+      if (!hint.hidden) show(screenEl.src);
+    }, 30000);
+  </script>
+</body>
+</html>

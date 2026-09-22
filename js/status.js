@@ -146,6 +146,7 @@
     document.title = (f.airline || '') + (f.number || '') + ' flight status';
   }
 
+  F.startFeedPolling(() => state, () => { F.save(state); render(); }, () => {});
   F.onChange((s) => { state = s; render(); });
   F.watchForUpdates();
   render();

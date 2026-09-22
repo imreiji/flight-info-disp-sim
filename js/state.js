@@ -109,6 +109,13 @@ window.FIDS = window.FIDS || {};
       united: {                  // extra detail from the united.com bookmarklet (see js/united.js)
         updated: '',
       },
+      feed: {                    // optional local server (server/gate_feed.py): follows a gate and rolls over
+        enabled: false,
+        url: 'http://127.0.0.1:8788',
+        sec: 60,
+        updated: '',
+        error: '',
+      },
       next: {
         dest: 'Bozeman, MT (BZN)',
         flight: 'UA562',

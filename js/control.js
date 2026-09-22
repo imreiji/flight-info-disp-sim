@@ -243,6 +243,16 @@
     a.textContent = ap.length === 3 ? ap + ' departures on FlightView' : 'departures on FlightView';
   }
 
+  // ---- optional local feed (server/gate_feed.py) ----
+  function feedMsg(t, err) { $('feedMsg').textContent = t; $('feedMsg').className = 'msg' + (err ? ' err' : ''); }
+  async function feedOnce() {
+    feedMsg('Fetching from the local feed...');
+    try { feedMsg(await F.refreshFeed(state)); commit(); fillForm(); renderPicker(); }
+    catch (e) { feedMsg(e.message, true); }
+  }
+  $('feedBtn').onclick = feedOnce;
+  F.startFeedPolling(() => state, (m) => { feedMsg(m); commit(); fillForm(); renderPicker(); }, (m) => feedMsg(m, true));
+
   // ---- FlightView departure picker (no API key needed: comes from the bookmark on FlightView) ----
   function fvData() {
     if (F.lastFlightView) return F.lastFlightView;

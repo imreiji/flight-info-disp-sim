@@ -114,7 +114,12 @@ window.FIDS = window.FIDS || {};
   F.importFlightViewFromHash = function (s) {
     const d = fromHash('fv');
     if (!d) return null;
-    F.lastFlightView = d;                       // the control page offers these as a flight picker
+    return F.applyFlightView(s, d);
+  };
+
+  // Departures from FlightView: set "next departure from this gate" (and keep them for the picker).
+  F.applyFlightView = function (s, d) {
+    F.lastFlightView = d;
     const f = s.flight;
     if (d.airport !== (f.originCode || '').toUpperCase()) {
       return { ok: false, picker: true, msg: 'Loaded ' + d.departures.length + ' departures from ' + d.airport +

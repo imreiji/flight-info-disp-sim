@@ -1,0 +1,24 @@
+{
+  "title": "Gate Information Display",
+  "description": "Amateur fan-made airport gate screen. Not affiliated with any airline.",
+  "type": "web",
+  "file": "index.html",
+  "visibility": "private",
+  "tags": ["Abstract"],
+  "general": {
+    "properties": {
+      "link": {
+        "order": 1,
+        "text": "Display link",
+        "type": "textinput",
+        "value": "https://yanjz124.github.io/flight-info-disp-sim/index.html"
+      },
+      "reload": {
+        "order": 2,
+        "text": "Reload now",
+        "type": "bool",
+        "value": false
+      }
+    }
+  }
+}
