@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gate Display Control</title>
+  <link rel="stylesheet" href="css/control.css">
+</head>
+<body>
+  <header class="bar">
+    <h1>Gate Display Control</h1>
+    <div class="bar-actions">
+      <button id="openDisplay" class="primary">Open display</button>
+      <button id="copyLink">Copy link for another device</button>
+      <button id="reset" class="danger">Reset</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="card preview">
+      <div class="frame"><iframe id="preview" src="index.html" title="Display preview"></iframe></div>
+    </section>
+
+    <!-- ================= BOARDING (most-used, so first) ================= -->
+    <section class="card">
+      <h2>Boarding</h2>
+      <div class="seg phases" id="phaseBtns"></div>
+      <div class="groups" id="groupBtns"></div>
+      <div class="row">
+        <button id="prevGroup">&larr; Previous</button>
+        <button id="nextGroup" class="primary">Next group &rarr;</button>
+        <span class="muted">Arrow keys on the display do the same.</span>
+      </div>
+      <div class="grid">
+        <label>Status pill
+          <select data-path="boarding.pill" id="pillSel"></select>
+        </label>
+        <label>Boarding time (min before dep)<input type="number" min="0" data-path="boarding.leadMin"></label>
+        <label>Minutes per group (auto)<input type="number" min="1" data-path="boarding.groupEveryMin"></label>
+        <label>Door closes (min before dep)<input type="number" min="0" data-path="boarding.closeMin"></label>
+        <label>Countdown window (min)<input type="number" min="0" data-path="boarding.countdownMin"></label>
+      </div>
+      <p class="muted">In <b>Auto</b> the right panel follows the clock: promos, then "Boarding in N minutes", "Boarding soon", each group in turn, final boarding, door closed.</p>
+    </section>
+
+    <!-- ================= DATA SOURCE ================= -->
+    <section class="card">
+      <h2>Flight data</h2>
+      <div class="seg">
+        <label><input type="radio" name="mode" value="flight" data-path="source.mode"> By flight number</label>
+        <label><input type="radio" name="mode" value="airport" data-path="source.mode"> By airport / gate</label>
+        <label><input type="radio" name="mode" value="manual" data-path="source.mode"> Manual only</label>
+      </div>
+
+      <div class="grid" data-show="flight">
+        <label>Flight number<input data-path="source.flight" placeholder="UA1234"></label>
+        <label>Date (departure, local)<input type="date" data-path="source.date"></label>
+        <label>Origin airport (multi-leg flights)<input data-path="source.airport" placeholder="SFO" maxlength="3"></label>
+      </div>
+
+      <div class="grid" data-show="airport">
+        <label>Airport<input data-path="source.airport" placeholder="SFO" maxlength="3"></label>
+        <label>Gate (optional)<input data-path="source.gate" placeholder="F12"></label>
+        <label>Destination (optional)<input data-path="source.dest" placeholder="ORD" maxlength="3"></label>
+      </div>
+
+      <div class="row" data-show="flight airport">
+        <button id="fetchBtn" class="primary">Fetch now</button>
+        <label class="inline"><input type="checkbox" data-path="source.autoRefresh"> Auto-refresh every</label>
+        <input type="number" min="1" max="120" class="tiny" data-path="source.refreshMin"> min
+        <label class="inline"><input type="checkbox" data-path="source.lookupNext"> Also look up next departure from the gate (extra API call)</label>
+      </div>
+      <div class="row"><span id="fetchMsg" class="msg"></span></div>
+      <div id="results" class="results" hidden></div>
+
+      <details class="key">
+        <summary>API key <span id="keyState" class="pill"></span></summary>
+        <p>Live data comes from <a href="https://rapidapi.com/aedbx-aedbx/api/aerodatabox" target="_blank" rel="noopener">AeroDataBox on RapidAPI</a> (free tier available). Subscribe, then paste your RapidAPI key here.
+          It is stored only in this browser and never goes into the repo.</p>
+        <div class="row">
+          <input id="apiKey" type="password" placeholder="X-RapidAPI-Key" autocomplete="off">
+          <button id="saveKey">Save key</button>
+          <button id="clearKey">Clear</button>
+        </div>
+      </details>
+    </section>
+
+    <!-- ================= FLIGHT DETAILS ================= -->
+    <section class="card">
+      <h2>Flight details <small>filled in by fetch, editable</small></h2>
+      <div class="grid">
+        <label>Airline<input data-path="flight.airline" maxlength="3"></label>
+        <label>Flight #<input data-path="flight.number"></label>
+        <label>Gate<input data-path="flight.gate"></label>
+        <label>Origin code<input data-path="flight.originCode" maxlength="3"></label>
+        <label>Destination code<input data-path="flight.destCode" maxlength="3" id="destCode"></label>
+        <label class="span2">Destination as shown<input data-path="flight.destLabel" placeholder="Sacramento, CA (SMF)"></label>
+        <label>Scheduled departure<input type="datetime-local" data-path="flight.sched"></label>
+        <label>Estimated departure<input type="datetime-local" data-path="flight.est"></label>
+        <label>Est. arrival (dest. local)<input type="datetime-local" data-path="flight.arr"></label>
+        <label>UTC offset (min)<input type="number" data-path="flight.utcOffsetMin"></label>
+        <label>Aircraft<input data-path="flight.aircraft"></label>
+        <label>API status<input data-path="flight.apiStatus" readonly></label>
+      </div>
+      <div class="row">
+        <label class="inline"><input type="checkbox" data-path="flight.lock"> Freeze details (refresh won't overwrite my edits)</label>
+        <span class="msg" id="updated"></span>
+      </div>
+      <div class="row">
+        <span class="muted">Quick delay:</span>
+        <button data-delay="0">On time</button>
+        <button data-delay="15">+15</button>
+        <button data-delay="30">+30</button>
+        <button data-delay="60">+60</button>
+      </div>
+    </section>
+
+    <!-- ================= LEFT PANEL ================= -->
+    <section class="card">
+      <h2>Flight tab</h2>
+      <div class="grid">
+        <label>Wi-Fi
+          <select data-path="amenities.wifi"><option value="">None</option><option>($)</option><option>(Free)</option></select>
+        </label>
+        <label>In-seat power (rows)<input data-path="amenities.power" placeholder="All rows"></label>
+        <label>Food
+          <select data-path="amenities.food"><option value="">None</option><option>($)</option><option>(Free)</option></select>
+        </label>
+        <label class="inline"><input type="checkbox" data-path="amenities.entertainment"> Entertainment</label>
+        <label class="inline"><input type="checkbox" data-path="amenities.beverages"> Beverages</label>
+      </div>
+      <div class="grid">
+        <label>Tabs
+          <select data-path="display.tabMode">
+            <option value="rotate">Rotate</option><option value="flight">Flight only</option>
+            <option value="upgrades">Upgrades only</option><option value="standbys">Standbys only</option>
+          </select>
+        </label>
+        <label>Seconds per tab<input type="number" min="3" data-path="display.tabSec"></label>
+        <label class="span2">"Need assistance" QR image<input data-path="display.qrUrl" placeholder="assets/qr-assistance.png"></label>
+      </div>
+      <p class="muted">If the QR image is missing, the Flight tab shows the estimated arrival instead.</p>
+    </section>
+
+    <section class="card">
+      <h2>Upgrades</h2>
+      <div class="grid">
+        <label>Cabin<input data-path="upgrades.cabin"></label>
+        <label>Capacity<input data-path="upgrades.capacity"></label>
+        <label>Booked<input data-path="upgrades.booked" placeholder="Full or a number"></label>
+        <label>Checked in<input data-path="upgrades.checkedIn"></label>
+      </div>
+      <div class="list-editor" id="upgradeEd"></div>
+    </section>
+
+    <section class="card">
+      <h2>Standbys</h2>
+      <label>Cabin availability (one per line, <code>Cabin = Full</code> or <code>Cabin = Available</code>)
+        <textarea data-path="standby.cabins" rows="3"></textarea>
+      </label>
+      <div class="list-editor" id="standbyEd"></div>
+    </section>
+
+    <section class="card">
+      <h2>Next departure <small>footer</small></h2>
+      <div class="grid">
+        <label class="span2">Destination<input data-path="next.dest" placeholder="Bozeman, MT (BZN)"></label>
+        <label>Flight<input data-path="next.flight" placeholder="UA562"></label>
+        <label>Departs<input type="datetime-local" data-path="next.time"></label>
+        <label>Status<input data-path="next.status" list="nextStatuses"></label>
+        <datalist id="nextStatuses"><option>On Time</option><option>Delayed</option><option>Cancelled</option></datalist>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Display</h2>
+      <div class="grid">
+        <label>Seconds per promo / boarding view<input type="number" min="3" data-path="display.panelSec"></label>
+        <label>Wi-Fi price (members)<input data-path="display.wifiMember"></label>
+        <label>Wi-Fi price (non-members)<input data-path="display.wifiNonMember"></label>
+        <label class="span2">Logo image (optional, replaces wordmark)<input data-path="display.logoUrl" placeholder="assets/logo.png"></label>
+      </div>
+      <div class="row">
+        <span class="muted">Promos:</span>
+        <label class="inline"><input type="checkbox" data-path="display.promoApp"> Download the app</label>
+        <label class="inline"><input type="checkbox" data-path="display.promoWifi"> Buy Wi-Fi</label>
+        <label class="inline"><input type="checkbox" data-path="display.promoPass"> Boarding pass group</label>
+        <label class="inline"><input type="checkbox" data-path="display.clock24"> 24-hour clock</label>
+      </div>
+    </section>
+    <p class="disclaimer">Amateur fan project, not nearly as accurate as real gate screens. Not affiliated with United Airlines or Star Alliance; not for real travel or airport use.</p>
+  </main>
+
+  <script src="js/state.js"></script>
+  <script src="js/airports.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/control.js"></script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gate Display</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="css/display.css">
+</head>
+<body>
+  <div id="stage">
+    <header class="hdr">
+      <div class="dest" id="dest"></div>
+      <div class="brand" id="brand"></div>
+      <div class="gate" id="gate"></div>
+    </header>
+
+    <div class="band">
+      <div class="fno" id="fno"></div>
+      <div class="cells" id="cells"></div>
+      <div class="pill-wrap"><span class="pill" id="pill"></span></div>
+    </div>
+
+    <div class="body">
+      <section class="left">
+        <nav class="tabs" id="tabs">
+          <span class="tab" data-tab="flight">Flight</span>
+          <span class="tab" data-tab="upgrades">Upgrades</span>
+          <span class="tab" data-tab="standbys">Standbys</span>
+        </nav>
+        <div class="panel" id="panel"></div>
+      </section>
+      <section class="right" id="right"></section>
+    </div>
+
+    <footer class="ftr">
+      <div class="next" id="next"></div>
+      <div class="dt"><span id="date"></span><span id="time"></span></div>
+    </footer>
+  </div>
+  <div id="err" hidden></div>
+
+  <script src="js/state.js"></script>
+  <script src="js/airports.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/icons.js"></script>
+  <script src="js/display.js"></script>
+</body>
+</html>

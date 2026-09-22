@@ -1,0 +1,192 @@
+/* Gate display, laid out on a fixed 1920x1080 stage that is scaled to fit the screen.
+   Colors and proportions are matched to reference photos of United's current gate screens. */
+:root {
+  --font: "Figtree", "Segoe UI", Arial, sans-serif;
+  --frame: #1d1d1f;        /* header, tab row, footer */
+  --band: #2152e3;         /* flight-number band */
+  --royal: #2638b8;        /* right-panel blue */
+  --deep: #1b1fd2;         /* current-group tile */
+  --mint: #62e6a6;         /* next-group tile */
+  --panel: #efeeea;        /* left panel */
+  --tab-off: #a4a4a4;
+  --ink: #1d1d1f;
+  --ink-2: #55565c;
+  --rule: #b9b9b9;
+  --ontime: #2f9a55;
+  --delay: #f5c56c;
+  --cancel: #d63a3a;
+  --cleared: #2c8a40;
+  --full: #d42a2a;
+  --avail: #2c8a40;
+  --stripe-1: #3d86f0;
+  --stripe-2: #a9d6f2;
+  --seat-bg: #e9ecf2;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+[hidden] { display: none !important; }
+
+html, body {
+  width: 100%; height: 100%;
+  background: #000; overflow: hidden;
+  font-family: var(--font); color: #fff;
+}
+
+#stage {
+  position: absolute; top: 50%; left: 50%;
+  width: 1920px; height: 1080px;
+  background: var(--frame);
+  display: grid;
+  grid-template-rows: 146px 124px 1fr 78px;
+  overflow: hidden;
+}
+.ic { width: 1em; height: 1em; vertical-align: -0.12em; flex: none; }
+
+/* ---------- header ---------- */
+.hdr { display: flex; align-items: center; padding: 0 0 0 56px; }
+.dest { flex: 1; font-size: 66px; font-weight: 500; letter-spacing: -0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.brand { display: flex; align-items: center; gap: 18px; padding: 0 44px; }
+.brand img { height: 64px; }
+.brand img.ua { height: 50px; }
+.brand img.sa { height: 46px; }
+.brand .sep { width: 2px; height: 50px; background: #fff; opacity: .8; }
+.gate {
+  align-self: stretch; display: flex; align-items: center;
+  padding: 0 56px 0 44px; border-left: 3px solid #fff;
+  margin: 18px 0; font-size: 100px; font-weight: 600; letter-spacing: -1px;
+}
+
+/* ---------- blue band ---------- */
+.band { background: var(--band); display: flex; align-items: center; padding: 0 44px 0 48px; gap: 56px; }
+.fno { display: flex; align-items: center; gap: 14px; font-size: 100px; font-weight: 500; letter-spacing: -1px; white-space: nowrap; }
+.fno .ic { width: 84px; height: 84px; }
+.cells { flex: 1; display: flex; gap: 56px; }
+.cell { display: flex; flex-direction: column; justify-content: center; }
+.cell .lbl { font-size: 28px; font-weight: 500; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+.cell .lbl .ic { width: 30px; height: 30px; }
+.cell .val { font-size: 56px; font-weight: 500; line-height: 1.05; white-space: nowrap; }
+.cell .val.struck { text-decoration: line-through; text-decoration-thickness: 4px; }
+.pill {
+  display: inline-block; font-size: 46px; font-weight: 500; line-height: 1;
+  padding: 16px 44px 18px; border-radius: 60px; border: 4px solid rgba(255,255,255,.9);
+  background: var(--ontime); color: #fff; white-space: nowrap;
+}
+.pill.delayed { background: var(--delay); color: var(--ink); border-color: #fff4dc; }
+.pill.cancelled { background: var(--cancel); }
+
+/* ---------- body ---------- */
+.body { display: grid; grid-template-columns: 838px 1fr; min-height: 0; }
+.left { display: grid; grid-template-rows: 70px 1fr; min-height: 0; }
+.tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 6px 4px 0 0; }
+.tab {
+  display: flex; align-items: center; justify-content: center;
+  background: var(--tab-off); color: #fff; font-size: 38px; font-weight: 500;
+  border-radius: 4px 4px 0 0;
+}
+.tab.on { background: var(--panel); color: var(--ink); }
+.panel { position: relative; background: var(--panel); color: var(--ink); padding: 22px 36px 20px; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+/* Tab change: a white veil fades in over the panel, the content swaps underneath, then it fades out. */
+.panel::after { content: ""; position: absolute; inset: 0; background: #fff; opacity: 0; transition: opacity .35s ease; pointer-events: none; }
+.panel.out::after { opacity: 1; }
+.tab { transition: background-color .35s ease, color .35s ease; }
+
+.p-title { font-size: 46px; font-weight: 500; padding-bottom: 8px; border-bottom: 3px solid var(--rule); letter-spacing: -0.3px; }
+.p-title sup { font-size: .5em; }
+
+/* flight tab */
+.amen { display: grid; grid-template-columns: 1fr 1fr; gap: 0 40px; margin-top: 24px; }
+.amen > div { display: flex; flex-direction: column; gap: 18px; }
+.am { display: flex; align-items: flex-start; gap: 14px; font-size: 38px; line-height: 1.15; }
+.am .ic { width: 40px; height: 40px; margin-top: 2px; }
+.am small { display: block; font-size: 24px; color: var(--ink-2); }
+.p-foot { margin-top: auto; display: flex; align-items: center; gap: 22px; }
+.p-foot img { width: 108px; height: 108px; image-rendering: pixelated; }
+.p-foot b { display: block; font-size: 36px; font-weight: 600; }
+.p-foot span { font-size: 24px; color: var(--ink-2); }
+.arrival { margin-top: auto; font-size: 42px; display: flex; align-items: center; gap: 16px; }
+.arrival .ic { width: 44px; height: 44px; }
+.arrival b { font-weight: 500; margin-left: 20px; }
+
+/* upgrade / standby tabs */
+.counts { display: flex; justify-content: space-between; font-size: 26px; margin: 14px 0 4px; }
+.cabins { font-size: 26px; margin: 12px 0 4px; line-height: 1.35; }
+.full { color: var(--full); }
+.avail { color: var(--avail); }
+.tbl { display: grid; grid-template-columns: 1fr 1fr; gap: 0 28px; margin-top: 10px; }
+.th, .tr { display: grid; grid-template-columns: 1fr 130px 76px; align-items: center; }
+.th { font-size: 20px; color: var(--ink-2); padding-bottom: 2px; }
+.th span:nth-child(n+2), .tr span:nth-child(n+2) { text-align: center; }
+.tr { height: 48px; font-size: 28px; border-bottom: 2px solid #c8c8c4; }
+.tr .nm { display: flex; align-items: center; gap: 10px; white-space: nowrap; overflow: hidden; }
+.badge { display: inline-flex; width: 34px; height: 34px; align-items: center; justify-content: center; background: var(--ink); color: #fff; font-size: 22px; font-weight: 700; flex: none; }
+.tr .ic { width: 30px; height: 30px; }
+.tr.cl { background: var(--cleared); color: #fff; border-bottom-color: var(--panel); padding-left: 10px; font-weight: 600; }
+.legend { margin-top: auto; display: flex; justify-content: space-between; align-items: flex-end; font-size: 24px; }
+.legend i { display: inline-block; width: 26px; height: 26px; background: var(--cleared); vertical-align: -4px; margin-right: 8px; }
+.legend small { font-size: 20px; color: var(--ink-2); }
+
+/* ---------- right panel ---------- */
+.right { position: relative; min-height: 0; overflow: hidden; background: var(--royal); }
+.rp { position: absolute; inset: 0; display: flex; flex-direction: column; }
+.rp .strip { height: 70px; flex: none; display: flex; align-items: center; justify-content: center; background: var(--frame); font-size: 38px; font-weight: 600; }
+.rp .strip.bottom { height: 64px; font-size: 32px; font-weight: 500; }
+.center { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+
+.countdown .l1, .countdown .l3 { font-size: 72px; font-weight: 500; }
+.countdown .l2 { font-size: 250px; font-weight: 500; line-height: 1; margin: 6px 0 10px; letter-spacing: -4px; }
+
+.soon, .closed { background: var(--frame); }
+.big { font-size: 96px; font-weight: 600; letter-spacing: -1px; }
+.sub { font-size: 44px; font-weight: 500; margin-top: 14px; max-width: 900px; }
+
+.tiles { flex: 1; display: grid; grid-template-columns: 1fr 1fr; }
+.tiles.one { grid-template-columns: 1fr; }
+.tile { display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--deep); }
+.tile.next { background: var(--mint); color: var(--ink); }
+.tile .t-lbl { font-size: 32px; font-weight: 600; letter-spacing: 4px; }
+.tile .t-num { font-size: 220px; font-weight: 500; line-height: 1; margin: 4px 0; }
+.tile .t-word { font-size: 62px; font-weight: 600; margin: 10px 0; }
+.tile .t-sub { font-size: 32px; font-weight: 600; letter-spacing: 4px; min-height: 40px; }
+
+.seatview { background: var(--seat-bg); color: var(--ink); }
+.seatview .bar { height: 56px; background: var(--band); flex: none; }
+.seatview .big { color: #3b3c44; }
+.seatview .sub { color: var(--band); margin-top: 4px; font-weight: 600; }
+.seated { width: 680px; margin-top: 30px; }
+
+.final { flex-direction: row; }
+.final .inner { flex: 1; display: flex; flex-direction: column; }
+.final .center { align-items: flex-start; text-align: left; padding-left: 64px; }
+.final .big { font-size: 110px; }
+.final .stripes { display: flex; }
+.final .stripes i { display: block; width: 110px; background: var(--stripe-1); }
+.final .stripes i + i { width: 46px; background: var(--stripe-2); }
+
+.promo .center { align-items: flex-start; text-align: left; padding: 0 64px; }
+.promo h2 { font-size: 84px; font-weight: 600; line-height: 1.05; letter-spacing: -1px; }
+.promo ul { list-style: none; margin-top: 26px; font-size: 40px; line-height: 1.45; }
+.promo li::before { content: "\2022  "; }
+.promo .qr { position: absolute; top: 44px; right: 56px; width: 200px; height: 200px; background: #fff; padding: 12px; image-rendering: pixelated; }
+.prices { display: flex; gap: 22px; margin-top: 34px; }
+.price { background: #fff; color: var(--band); border-radius: 18px; padding: 16px 34px; text-align: center; }
+.price b { display: block; font-size: 96px; font-weight: 700; line-height: 1; }
+.price span { font-size: 24px; font-weight: 600; color: var(--ink-2); }
+.pass { margin-top: 34px; background: #f7f7f4; color: var(--ink); border-radius: 14px; width: 620px; padding: 22px 30px; display: grid; grid-template-columns: 1fr auto auto; gap: 24px; align-items: center; font-size: 36px; }
+.pass .route { font-weight: 600; }
+.pass .circ { border: 5px solid #d9262b; border-radius: 50%; padding: 12px 18px; text-align: center; line-height: 1.05; }
+.pass .circ small { display: block; font-size: 18px; color: var(--ink-2); }
+.pass .circ b { font-size: 42px; }
+
+/* ---------- footer ---------- */
+.ftr { display: flex; align-items: center; justify-content: space-between; padding: 0 44px 0 40px; font-size: 32px; font-weight: 500; }
+.next { display: flex; align-items: center; gap: 52px; white-space: nowrap; }
+.next > span { display: flex; align-items: center; gap: 10px; }
+.next .ic { width: 34px; height: 34px; }
+.next .op { border: 3px solid #fff; border-radius: 40px; padding: 2px 24px 4px; }
+.dt { display: flex; gap: 36px; }
+
+#err {
+  position: fixed; bottom: 8px; right: 8px; max-width: 40vw;
+  background: rgba(160, 20, 30, .9); color: #fff; font: 13px/1.4 system-ui, sans-serif;
+  padding: 6px 10px; border-radius: 4px;
+}
