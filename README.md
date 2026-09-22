@@ -44,6 +44,11 @@ data. That covers nearly everything on the screen: live times and delay reason, 
 aircraft and tail, inbound flight, weather, amenities, and the upgrade/standby lists with capacity, booked and checked-in
 counts. Nothing to install, and it works from the GitHub Pages site.
 
+The bookmark from the GitHub Pages site only loads `js/united.js` from the site each time it's clicked, so it always
+runs the latest code. Bookmarks dragged before this change carry an old copy of the code: drag the button again once.
+A bookmark from a local copy (`localhost`) still carries the whole code, because united.com can't load scripts from
+your own computer, so drag it again after pulling changes.
+
 **Auto-refresh:** united.com's flight page never refreshes by itself. After you click the bookmark, the united.com tab
 clicks the page's own "Refresh now" every 5 minutes and sends the new data to the control page. A small note in the
 corner of the united.com page shows the last refresh and has a Stop link. Both tabs must stay open, but they can be in

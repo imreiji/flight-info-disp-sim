@@ -317,8 +317,6 @@
     setTimeout(() => window.close(), 1200);   // allowed: this tab was opened by the bookmark's window.open
   }
 
-  // Data arrives in the URL hash from the bookmark. An already-open control tab only sees a hash change
-  // (no reload), so run this on load and on every hashchange.
   function unitedLoaded(auto) {
     const u = state.united;
     unitedMsg((auto ? 'Auto-refreshed ' : 'Loaded ') + state.flight.airline + state.flight.number + ' from united.com at ' + new Date(u.updated).toLocaleTimeString() +
@@ -326,6 +324,8 @@
       ' · ' + state.upgrades.list.length + ' on upgrade list, ' + state.standby.list.length + ' on standby.' +
       (auto ? ' Keep this tab and the united.com tab open for updates every few minutes.' : ''));
   }
+  // Data arrives in the URL hash from the bookmark. An already-open control tab only sees a hash change
+  // (no reload), so run this on load and on every hashchange.
   function runImports(fresh) {
     let imported = false, auto = false;
     try {

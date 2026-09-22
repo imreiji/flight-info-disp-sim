@@ -139,9 +139,21 @@ window.FIDS = window.FIDS || {};
     })();
   }
 
+  F.grabUnited = grabUnited;
+
   // javascript: URL for the bookmark; `target` is this site's control page.
+  // A bookmark keeps whatever code it was dragged with, so on a public site it is only a small loader that
+  // fetches this file fresh on every click. united.com and FlightView can't load scripts from this computer,
+  // so a local copy (localhost, file://) still gets the whole function copied into the bookmark.
   F.bookmarklet = function (target) {
-    return 'javascript:' + encodeURIComponent('(' + grabUnited.toString() + ')(' + JSON.stringify(target) + ')');
+    const embed = '(' + grabUnited.toString() + ')(' + JSON.stringify(target) + ')';
+    if (!/^https:/.test(target) || /^https:\/\/(localhost|127\.|\[::1\])/.test(target)) return 'javascript:' + encodeURIComponent(embed);
+    const src = new URL('js/united.js', target).href;
+    return 'javascript:' + encodeURIComponent('(function(){var s=document.createElement("script");' +
+      's.src=' + JSON.stringify(src) + '+"?v="+Date.now();' +
+      's.onload=function(){window.FIDS.grabUnited(' + JSON.stringify(target) + ')};' +
+      's.onerror=function(){alert("Could not load the gate display code from ' + new URL(target).host + '. Check your connection and try again.")};' +
+      'document.head.appendChild(s)})()');
   };
 
   const fromHash = (key) => {
