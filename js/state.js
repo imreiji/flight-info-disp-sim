@@ -54,7 +54,7 @@ window.FIDS = window.FIDS || {};
         destLabel: 'Sacramento, CA (SMF)',
         sched: sched,
         est: '',
-        delayReason: '',         // e.g. "Late aircraft"; shown on the delay slide and status page
+        delayReason: '',         // e.g. "Late aircraft"; shown on the status page
         arr: F.shiftLocal(sched, 50),
         gate: 'F5',
         terminal: '3',

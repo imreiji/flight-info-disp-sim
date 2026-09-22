@@ -165,33 +165,9 @@
     return '<div class="tile' + (green ? ' next' : '') + '">' + inner + '<span class="t-sub">' + (green ? 'LINE UP NOW' : '') + '</span></div>';
   }
 
-  function delaySlide(s, d, c24) {
-    const f = s.flight;
-    return '<div class="rp delay"><div class="center"><div class="big">We apologize<br>for the delay</div>' +
-      '<div class="sub">New departure time <b>' + F.fmtTime(f.est || f.sched, c24) + '</b></div>' +
-      (f.delayReason ? '<div class="reason">Reason: ' + esc(f.delayReason) + '</div>' : '') + '</div></div>';
-  }
-
-  // Who may preboard, as listed on United's gate screens (icons from United's own sprite).
-  const PREBOARD = [
-    ['special-needs', 'pb-yellow', 'Accessibility assistance'],
-    ['active-duty', 'pb-green', 'Active military personnel'],
-    ['GS', 'pb-gs', 'United Global Services®'],
-    ['stroller', 'pb-purple', 'Families with children age 2 and under'],
-  ];
-  function preboardSlide() {
-    return '<div class="rp preboard"><div class="strip">Preboarding now</div><ul>' + PREBOARD.map(([ic, cls, txt]) =>
-      '<li><span class="pb-ic ' + cls + '">' + (ic === 'GS' ? 'GS' : I(ic)) + '</span>' + txt + '</li>').join('') + '</ul></div>';
-  }
-
   function renderRight(s, d, c24) {
     let html;
     const sec = s.display.panelSec;
-    // While delayed and not yet boarding, every other slot shows the delay slide.
-    if (d.pill === 'delayed' && ['promo', 'countdown', 'soon'].includes(d.phase) && slot(sec, 2) === 1) {
-      set('right', delaySlide(s, d, c24));
-      return;
-    }
     switch (d.phase) {
       case 'promo': {
         const list = promos(s, c24);

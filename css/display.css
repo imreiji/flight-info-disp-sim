@@ -136,7 +136,6 @@ html, body {
 .countdown .l2 { font-size: 250px; font-weight: 500; line-height: 1; margin: 6px 0 10px; letter-spacing: -4px; }
 
 .soon, .closed { background: var(--frame); }
-.rp.delay { background: var(--frame); }
 .rp.preboard { background: #2a2a2d; }
 .preboard ul { list-style: none; margin: 0; padding: 40px 64px; display: grid; gap: 34px; }
 .preboard li { display: flex; align-items: center; gap: 30px; font-size: 50px; font-weight: 500; line-height: 1.1; }
@@ -146,9 +145,6 @@ html, body {
 .pb-green { background: #9fd36a; }
 .pb-purple { background: #cdbdf0; }
 .pb-gs { background: #fff; border: 4px solid #1d1d1f; outline: 3px solid #fff; font-size: 36px; font-weight: 700; letter-spacing: 1px; }
-.rp.delay .big { line-height: 1.05; }
-.rp.delay .sub b { font-weight: 700; }
-.rp.delay .reason { font-size: 40px; margin-top: 26px; padding: 10px 28px; border: 3px solid rgba(255,255,255,.7); border-radius: 50px; }
 .big { font-size: 96px; font-weight: 600; letter-spacing: -1px; }
 .sub { font-size: 44px; font-weight: 500; margin-top: 14px; max-width: 900px; }
 
