@@ -75,6 +75,7 @@ window.FIDS = window.FIDS || {};
       },
       amenities: {
         wifi: '($)',             // '' hides it
+        wifiProvider: '',        // "Starlink" shows under the Wi-Fi line
         power: 'Rows 1-4',       // '' hides it
         entertainment: false,
         food: '',
@@ -273,7 +274,7 @@ window.FIDS = window.FIDS || {};
   // Per-flight data that must not carry over to a different flight (amenities, lists, delay reason...).
   F.flightKey = (f) => [f.airline, String(f.number || '').replace(/\D/g, ''), (f.sched || '').slice(0, 10), f.originCode].join('|').toUpperCase();
   F.resetFlightData = function (s) {
-    s.amenities = { wifi: '', power: '', entertainment: false, food: '', beverages: false };
+    s.amenities = { wifi: '', wifiProvider: '', power: '', entertainment: false, food: '', beverages: false };
     s.upgrades = { cabin: s.upgrades.cabin, capacity: '', booked: '', checkedIn: '', list: [] };
     s.standby = { cabins: '', list: [] };
     s.united = { updated: '' };

@@ -63,7 +63,7 @@ window.FIDS = window.FIDS || {};
         var amenities = null, upgrades = null;
         try {
           amenities = await get('/api/flightstatus/amenities/' + num + '/' + date + '/' + from + '/' + to + '?ownerAirlineCode=' + (eq.OwnerAirlineCode || '') +
-            '&equipmentCode=' + ((eq.Model && eq.Model.Key) || '') + '&tailNumber=' + (eq.TailNumber || '') + '&shipNumber=' + (eq.PseudoTailNumber || ''));
+            '&equipmentCode=' + ((eq.Model && eq.Model.Key) || '') + '&tailNumber=' + (eq.TailNumber || '') + '&shipNumber=' + (eq.PseudoTailNumber || eq.NoseNumber || ''));
         } catch (e) {}
         try { upgrades = await get('/api/flightstatus/upgradeListExtended?flightNumber=' + num + '&flightDate=' + date + '&fromAirportCode=' + from); } catch (e) {}
         send('united', { fetchedAt: new Date().toISOString(), carrier: carrier, from: from, status: status, amenities: amenities, upgrades: upgrades }, note);
@@ -221,12 +221,42 @@ window.FIDS = window.FIDS || {};
       };
       cabinNames = list.filter((a) => a.Name === 'Seating' && a.Cabin).map((a) => a.Cabin);
       const eqd = am.Equipment || {};
+      // Widebodies often have no Seating entries, but the capacity line always names the cabins, front to back:
+      // "64 United Polaris® business, 35 United Premium Plus®, 123 United Economy®"
+      const capLine = (eqd.Cabins && eqd.Cabins[0] && eqd.Cabins[0].Description) || '';
+      if (!cabinNames.length && capLine) cabinNames = capLine.split(',').map((c) => c.replace(/^\s*\d+\s*/, '').trim()).filter(Boolean);
       x.aircraftInfo = {
         model: eqd.Model && eqd.Model.Description, cabins: eqd.Cabins && eqd.Cabins[0] && eqd.Cabins[0].Description,
         cruise: eqd.CruiseSpeed, wingspan: eqd.Wingspan,
       };
       x.amenityText = list.filter((a) => a.Value).map((a) => ({ name: a.Name, cabin: a.Cabin || (a.Type && a.Type.Description) || '', text: [].concat(a.Value).join(' ') }));
     }
+
+    // ---- per-cabin details in the status response: always present, names every cabin front to back ----
+    const eqs = (seg && seg.Equipment) || {};
+    const lca = eqs.ListOfCabinsAmenities || [];
+    if (lca.length) {
+      cabinNames = lca.map((c) => c.CabinHeader).filter(Boolean);        // "United Polaris® business", ...
+      const val = (c, n) => ((c.Amenities || []).find((a) => a.Name === n) || {}).Value || '';
+      const offered = (v) => !!v && !/not offered|not available/i.test(v);
+      const econ = lca[lca.length - 1];
+      const a = s.amenities;
+      if (!am) {                                                          // amenities call failed: fill in from here
+        a.power = offered(val(econ, 'InseatPower')) ? 'All rows'
+          : lca.some((c) => offered(val(c, 'InseatPower'))) ? (lca[0].CabinHeader || 'Front cabin') : '';
+        a.entertainment = lca.some((c) => /entertainment/i.test(val(c, 'Entertainment')));
+        a.beverages = true;
+      }
+      const wifi = lca.map((c) => val(c, 'WiFi')).filter(offered);
+      a.wifi = wifi.length ? (wifi.some((w) => /free/i.test(w)) ? '(Free)' : '($)') : '';
+      x.wifiText = val(econ, 'WiFi') || val(lca[0], 'WiFi');             // "Internet by Starlink, free for MileagePlus® members"
+      x.cabinAmenities = lca.map((c) => ({
+        cabin: c.CabinHeader,
+        items: (c.Amenities || []).filter((i) => i.Name !== 'Aircraft specs').map((i) => ({ name: i.Name, text: i.Value })),
+      }));
+    }
+    x.wifiProvider = (eqs.Amenities && eqs.Amenities.WifiPrvdr) || '';   // "Starlink", "Panasonic", ...
+    s.amenities.wifiProvider = x.wifiProvider;
 
     // ---- upgrade / standby lists with capacity ----
     const up = d.upgrades;

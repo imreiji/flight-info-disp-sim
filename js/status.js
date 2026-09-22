@@ -25,10 +25,17 @@
 
   function amenities(s) {
     const u = s.united || {};
+    const wifi = u.wifiText ? '<li>' + I('wifi') + '<div><b>Wi-Fi' + (u.wifiProvider ? ' \u00b7 ' + esc(u.wifiProvider) : '') + '</b>' + esc(u.wifiText) + '</div></li>' : '';
     if (u.amenityText && u.amenityText.length) {
-      return u.amenityText.filter((a) => AMEN[a.name]).map((a) =>
-        '<li>' + I(AMEN[a.name][0]) + '<div><b>' + AMEN[a.name][1] + (a.cabin && a.cabin.length > 1 ? ' · ' + esc(a.cabin) : '') +
+      return wifi + u.amenityText.filter((a) => AMEN[a.name] && a.name !== 'Entertainment').map((a) =>
+        '<li>' + I(AMEN[a.name][0]) + '<div><b>' + AMEN[a.name][1] + (a.cabin && a.cabin.length > 1 ? ' \u00b7 ' + esc(a.cabin) : '') +
         '</b>' + esc(a.text) + '</div></li>').join('');
+    }
+    if (u.cabinAmenities && u.cabinAmenities.length) {
+      const ICON = { WiFi: 'wifi', Entertainment: 'movie', InseatPower: 'power' };
+      const LABEL = { WiFi: 'Wi-Fi', Entertainment: 'Entertainment', InseatPower: 'In-seat power' };
+      return u.cabinAmenities.map((c) => c.items.filter((i) => ICON[i.name]).map((i) =>
+        '<li>' + I(ICON[i.name]) + '<div><b>' + LABEL[i.name] + ' \u00b7 ' + esc(c.cabin) + '</b>' + esc(i.text).replace(/\n+/g, ' \u00b7 ') + '</div></li>').join('')).join('');
     }
     const a = s.amenities, out = [];
     if (a.wifi) out.push(['wifi', 'Wi-Fi', a.wifi === '(Free)' ? 'Free' : 'Available for purchase']);

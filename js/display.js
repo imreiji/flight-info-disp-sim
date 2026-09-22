@@ -75,7 +75,7 @@
   function flightPanel(s, c24) {
     const a = s.amenities, f = s.flight;
     const col1 = [], col2 = [];
-    if (a.wifi) col1.push(amenity('wifi', 'Wi-Fi ' + a.wifi));
+    if (a.wifi) col1.push(amenity('wifi', 'Wi-Fi ' + a.wifi, a.wifiProvider === 'Starlink' ? 'Starlink' : ''));
     if (a.power) col1.push(amenity('power', 'In-seat power', a.power));
     if (a.entertainment) col2.push(amenity('movie', 'Entertainment'));
     if (a.food) col2.push(amenity('food', 'Food ' + a.food));
