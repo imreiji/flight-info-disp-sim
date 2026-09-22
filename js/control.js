@@ -244,7 +244,6 @@
   bm.addEventListener('click', (e) => { e.preventDefault(); alert('Drag this button to your bookmarks bar, then click it while viewing a flight on united.com.'); });
   try {
     if (F.importUnitedFromHash(state)) {
-      state.next = { dest: '', flight: '', time: '', status: '' };   // never show a stale/demo next departure
       commit();
       lookupNextDeparture();
       const u = state.united;
@@ -283,5 +282,6 @@
 
   F.onChange((s) => { state = s; fillForm(); });   // e.g. arrow keys pressed on the display
   setInterval(renderBoarding, 5000);                 // keep the auto-phase readout current
+  F.watchForUpdates();
   fillForm();
 })(window.FIDS);

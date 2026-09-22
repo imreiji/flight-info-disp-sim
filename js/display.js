@@ -279,6 +279,7 @@
   window.addEventListener('resize', fit);
   window.addEventListener('hashchange', () => { state = F.load(); render(); });
 
+  F.watchForUpdates();
   fit();
   render();
   setInterval(render, 1000);

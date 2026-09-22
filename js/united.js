@@ -97,6 +97,10 @@ window.FIDS = window.FIDS || {};
   F.applyUnited = function (s, d) {
     const f = s.flight, x = { updated: d.fetchedAt || new Date().toISOString() };
     const seg = pickSegment(d.status, d.from || f.originCode);
+    if (seg) {
+      const incoming = { airline: d.carrier || f.airline, number: seg.FlightNumber, sched: hhmm(seg.DepartureDateTime), originCode: code(seg.DepartureAirport) };
+      if (F.flightKey(incoming) !== F.flightKey(f)) F.resetFlightData(s);
+    }
     if (d.carrier) f.airline = d.carrier;
 
     // ---- times, gate, status ----

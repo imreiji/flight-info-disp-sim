@@ -117,6 +117,7 @@ window.FIDS = window.FIDS || {};
   };
 
   F.applyFlight = function (s, leg) {
+    if (F.flightKey({ ...s.flight, ...leg }) !== F.flightKey(s.flight)) F.resetFlightData(s);
     for (const k of Object.keys(leg)) if (leg[k] !== undefined) s.flight[k] = leg[k];
   };
 })(window.FIDS);

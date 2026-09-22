@@ -140,6 +140,7 @@
   }
 
   F.onChange((s) => { state = s; render(); });
+  F.watchForUpdates();
   render();
   setInterval(render, 30000);
 })(window.FIDS);

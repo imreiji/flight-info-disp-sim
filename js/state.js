@@ -269,6 +269,40 @@ window.FIDS = window.FIDS || {};
     return { phase, group, pill, delayMin, depLocal, boardLocal, minsToBoard };
   };
 
+  // Per-flight data that must not carry over to a different flight (amenities, lists, delay reason...).
+  F.flightKey = (f) => [f.airline, String(f.number || '').replace(/\D/g, ''), (f.sched || '').slice(0, 10), f.originCode].join('|').toUpperCase();
+  F.resetFlightData = function (s) {
+    s.amenities = { wifi: '', power: '', entertainment: false, food: '', beverages: false };
+    s.upgrades = { cabin: s.upgrades.cabin, capacity: '', booked: '', checkedIn: '', list: [] };
+    s.standby = { cabins: '', list: [] };
+    s.united = { updated: '' };
+    s.next = { dest: '', flight: '', time: '', status: '' };
+    s.flight.delayReason = '';
+    s.flight.tail = '';
+  };
+
+  // Reload a long-running page when the site is updated (GitHub Pages caches files for ~10 min).
+  F.watchForUpdates = function (everyMs) {
+    const files = () => [location.pathname,
+      ...[...document.scripts].map((x) => x.src).filter(Boolean),
+      ...[...document.querySelectorAll('link[rel=stylesheet]')].map((x) => x.href).filter((h) => h.startsWith(location.origin))];
+    const tag = async (u) => {
+      const r = await fetch(u, { method: 'HEAD', cache: 'no-store' });
+      return r.headers.get('etag') || r.headers.get('last-modified') || '';
+    };
+    let seen = null;
+    setInterval(async () => {
+      try {
+        const now = await Promise.all(files().map(tag));
+        if (seen && now.join() !== seen.join()) {
+          await Promise.all(files().map((u) => fetch(u, { cache: 'reload' })));   // refresh the HTTP cache first
+          location.reload();
+        }
+        seen = now;
+      } catch (e) { /* offline: try again later */ }
+    }, everyMs || 3 * 60000);
+  };
+
   // Bulk add: one name per line, optional seat at the end ("SMITH, J. 3A").
   F.parseNames = function (text) {
     return text.split('\n').map((l) => l.trim()).filter(Boolean).map((l) => {
