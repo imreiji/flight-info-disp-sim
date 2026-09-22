@@ -70,7 +70,7 @@
 
   // ---- boarding ----
   $('pillSel').innerHTML = Object.entries(F.PILLS)
-    .map(([k, v]) => '<option value="' + k + '">' + (k === 'auto' ? 'Auto (delay / cancel from data)' : v) + '</option>').join('');
+    .map(([k, v]) => '<option value="' + k + '">' + (k === 'auto' ? 'Auto (delay from data)' : v) + '</option>').join('');
 
   function renderBoarding() {
     const d = F.derive(state), b = state.boarding;

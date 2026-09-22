@@ -23,7 +23,7 @@ window.FIDS = window.FIDS || {};
     closed: 'Boarding closed',
   };
 
-  F.PILLS = { auto: 'Auto', ontime: 'On Time', delayed: 'Delayed', cancelled: 'Cancelled' };
+  F.PILLS = { auto: 'Auto', ontime: 'On Time', delayed: 'Delayed' };
 
   function pad(n) { return String(n).padStart(2, '0'); }
 
@@ -249,12 +249,12 @@ window.FIDS = window.FIDS || {};
     const minsToBoard = Math.max(0, Math.ceil((boardT - now) / 60000));
 
     let pill = b.pill;
-    if (pill === 'auto') pill = api.startsWith('cancel') ? 'cancelled' : delayMin >= 5 || api === 'delayed' ? 'delayed' : 'ontime';
+    if (pill === 'auto' || !F.PILLS[pill]) pill = delayMin >= 5 || api === 'delayed' ? 'delayed' : 'ontime';
 
     let phase = b.phase, group = Math.max(0, Math.min(F.LAST_GROUP, +b.group || 0));
     if (phase === 'auto' && isFinite(depT)) {
       const every = Math.max(1, +b.groupEveryMin || 4) * 60000;
-      if (pill === 'cancelled' || /departed|enroute|arrived|approaching/.test(api) ||
+      if (/cancel|departed|enroute|arrived|approaching/.test(api) ||
           now >= depT - (+b.closeMin || 0) * 60000) phase = 'closed';
       else if (now >= boardT) {
         const i = Math.floor((now - boardT) / every);
@@ -264,7 +264,7 @@ window.FIDS = window.FIDS || {};
       else if (minsToBoard <= (+b.countdownMin || 0)) phase = 'countdown';
       else phase = 'promo';
     } else if (phase === 'auto') phase = 'promo';
-    if (b.pill === 'cancelled' || !F.PHASES[phase]) phase = 'closed';   // also maps old saved "departed"/"cancelled"
+    if (!F.PHASES[phase]) phase = 'closed';   // old saved "departed"/"cancelled" phases
 
     return { phase, group, pill, delayMin, depLocal, boardLocal, minsToBoard };
   };

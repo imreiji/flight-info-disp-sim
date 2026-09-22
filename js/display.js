@@ -48,8 +48,7 @@
       ? '<div class="cell"><span class="lbl">' + I(icon) + lbl + '</span><span class="val ' + (cls || '') + '">' + val + '</span></div>' : '';
     const arr = F.fmtTime(f.arr, c24);
     let cells;
-    if (d.pill === 'cancelled') cells = cell('clock', 'Orig. departure', F.fmtTime(f.sched, c24));
-    else if (d.pill === 'delayed' && f.est) {
+    if (d.pill === 'delayed' && f.est) {
       cells = cell('takeoff', 'Est. departure', F.fmtTime(f.est, c24)) +
               cell('clock', 'Orig. departure', F.fmtTime(f.sched, c24), 'struck') +
               cell('land', 'Est. arrival', arr);
@@ -196,8 +195,8 @@
         break;
       }
       case 'final':
-        html = '<div class="rp final"><div class="inner"><div class="strip">Boarding now</div><div class="center"><div class="big">All groups</div>' +
-          '<div class="sub">Final boarding</div></div></div><div class="stripes"><i></i><i></i></div></div>';
+        html = '<div class="rp final"><div class="strip">Boarding now</div><div class="inner"><div class="center"><div class="big">All groups</div>' +
+          '<div class="sub">Final boarding</div></div><div class="stripes"><i></i><i></i></div></div></div>';
         break;
       case 'closed':
         html = '<div class="rp closed"><div class="center"><div class="big">Boarding closed</div></div></div>';

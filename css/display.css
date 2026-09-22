@@ -72,7 +72,6 @@ html, body {
   background: var(--ontime); color: #fff; white-space: nowrap;
 }
 .pill.delayed { background: var(--delay); color: var(--ink); border-color: #fff4dc; }
-.pill.cancelled { background: var(--cancel); }
 
 /* ---------- body ---------- */
 .body { display: grid; grid-template-columns: 838px 1fr; min-height: 0; }
@@ -163,8 +162,7 @@ html, body {
 .seatview .sub { color: var(--band); margin-top: 4px; font-weight: 600; }
 .seated { width: 680px; margin-top: 30px; }
 
-.final { flex-direction: row; }
-.final .inner { flex: 1; display: flex; flex-direction: column; }
+.final .inner { flex: 1; display: flex; }
 .final .center { align-items: flex-start; text-align: left; padding-left: 64px; }
 .final .big { font-size: 110px; }
 .final .stripes { display: flex; }

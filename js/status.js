@@ -63,7 +63,7 @@
     const pillTxt = departed ? 'Departed' : F.PILLS[d.pill];
 
     let banner = '';
-    if (d.pill === 'cancelled') {
+    if (/cancel/i.test(f.apiStatus)) {
       banner = '<div class="banner cancel">' + I('delay') + '<div><b>This flight has been cancelled</b>Check the United app for rebooking options.</div></div>';
     } else if (late) {
       banner = '<div class="banner delay">' + I('delay') + '<div><b>We apologize for the delay</b>' +
