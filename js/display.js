@@ -157,13 +157,19 @@
     return out;
   }
 
-  // Blue tile: Group 1 (or Pre-boarding). Green tile: every later group called so far ("2", "2-3", "2-4"...).
-  function groupTile(label, num, green) {
-    const inner = num == null
-      ? '<span class="t-word">' + label + '</span>'
-      : '<span class="t-lbl">' + label + '</span><span class="t-num">' + num + '</span>';
-    return '<div class="tile' + (green ? ' next' : '') + '">' + inner + '<span class="t-sub">' + (green ? 'LINE UP NOW' : '') + '</span></div>';
+  // Boarding tiles (blue = boarding, green = next / later groups):
+  //   group 1: [1] [2 LINE UP NOW]   group 2: [1] [2]   group 3: [1-2] [3]   then [1-2] [3-4], [3-5], [3-6]
+  function groupTile(from, to, green, lineUp) {
+    const lbl = from === to ? 'GROUP' : 'GROUPS', num = from === to ? from : from + '-' + to;
+    return '<div class="tile' + (green ? ' green' : '') + '"><span class="t-lbl">' + lbl + '</span><span class="t-num">' + num +
+      '</span><span class="t-sub">' + (lineUp ? 'LINE UP NOW' : '') + '</span></div>';
   }
+  function boardingTiles(g) {
+    if (g === 1) return groupTile(1, 1) + groupTile(2, 2, true, true);
+    if (g === 2) return groupTile(1, 1) + groupTile(2, 2, true);
+    return groupTile(1, 2) + groupTile(3, g, true);
+  }
+
 
   function renderRight(s, d, c24) {
     let html;
@@ -188,10 +194,8 @@
           html = '<div class="rp seatview"><div class="bar"></div><div class="center"><div class="big">Groups 3-' + F.LAST_GROUP +
             '</div><div class="sub">Have a seat until<br>your group is called</div>' + F.seated + '</div><div class="bar"></div></div>';
         } else {
-          const blue = g === 0 ? groupTile('Pre-boarding', null, false) : groupTile('GROUP', 1, false);
-          const green = g >= 2 ? (g === 2 ? groupTile('GROUP', 2, true) : groupTile('GROUPS', '2-' + g, true)) : '';
-          html = '<div class="rp"><div class="strip">Boarding Now</div><div class="tiles' + (green ? '' : ' one') + '">' +
-            blue + green + '</div><div class="strip bottom">Watch for your group number</div></div>';
+          html = '<div class="rp"><div class="strip">Boarding Now</div><div class="tiles">' + boardingTiles(g) +
+            '</div><div class="strip bottom">Watch for your group number</div></div>';
         }
         break;
       }

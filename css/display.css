@@ -150,7 +150,7 @@ html, body {
 .tiles { flex: 1; display: grid; grid-template-columns: 1fr 1fr; }
 .tiles.one { grid-template-columns: 1fr; }
 .tile { display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--deep); }
-.tile.next { background: var(--mint); color: var(--ink); }
+.tile.green { background: var(--mint); color: var(--ink); }
 .tile .t-lbl { font-size: 32px; font-weight: 600; letter-spacing: 4px; }
 .tile .t-num { font-size: 220px; font-weight: 500; line-height: 1; margin: 4px 0; }
 .tile .t-word { font-size: 62px; font-weight: 600; margin: 10px 0; }
