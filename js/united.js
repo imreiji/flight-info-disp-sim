@@ -235,7 +235,11 @@ window.FIDS = window.FIDS || {};
       const pbts = order.map((c) => up.pbts.find((p) => p.cabin === c)).filter(Boolean);
       const cabinName = (c) => {
         const i = pbts.findIndex((p) => p.cabin === c);
-        return cabinNames[i] || { Front: 'United First®', Middle: 'United Premium Plus℠', Rear: 'United Economy®' }[c];
+        if (cabinNames[i]) return cabinNames[i];
+        // United's data often leaves widebody cabins unnamed: use United's branding rules.
+        const threeCabin = pbts.some((p) => p.cabin === 'Middle');
+        const front = x.international ? (threeCabin ? 'United Polaris® business' : 'United Business®') : 'United First®';
+        return { Front: front, Middle: 'United Premium Plus℠', Rear: 'United Economy®' }[c];
       };
       const front = up.pbts.find((p) => p.cabin === 'Front') || {};
       const ciFront = (up.checkInSummaries || []).find((c) => c.cabin === 'Front') || {};
