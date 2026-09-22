@@ -46,7 +46,11 @@ counts. Click it again to refresh. Nothing to install, and it works from the Git
 
 The data only moves between your own browser tabs. Upgrade/standby names (surname + initial, as United shows them publicly)
 stay in your browser's storage, are never committed, and are left out of "Copy link for another device" snapshots.
-The next departure from the gate is not part of United's data; use AeroDataBox or type it in.
+**Next departure from the gate:** United's data doesn't include it, so the control page links to the airport's
+departures on [FlightView](https://www.flightview.com/). Click the same bookmark there: it reads FlightView's departures
+(with gates) and picks the next flight from your gate. AeroDataBox can also be used, but its free data often has no gates.
+
+A tab opened by the bookmark hands its update to an already-open control page and closes itself.
 
 ## Flight status page
 

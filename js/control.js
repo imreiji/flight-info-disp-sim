@@ -29,6 +29,7 @@
     renderBoarding();
     listEditors.forEach((ed) => ed.render());
     updateUnitedLink();
+    updateFlightViewLink();
   }
 
   // Deep link to the flight's united.com details page, built from Flight details.
@@ -236,23 +237,63 @@
   }
   $('nextBtn').onclick = lookupNextDeparture;
 
+  function updateFlightViewLink() {
+    const ap = (state.flight.originCode || '').toUpperCase(), a = $('fvLink');
+    a.href = ap.length === 3 ? 'https://www.flightview.com/airport/' + ap + '/departures' : 'https://www.flightview.com/';
+    a.textContent = ap.length === 3 ? ap + ' departures on FlightView' : 'departures on FlightView';
+  }
+
   // ---- United bookmarklet ----
   function unitedMsg(t, err) { $('unitedMsg').textContent = t; $('unitedMsg').className = 'msg' + (err ? ' err' : ''); }
   const bm = $('bookmarklet');
   bm.href = F.bookmarklet(location.origin + location.pathname);
   bm.addEventListener('click', (e) => { e.preventDefault(); alert('Drag this button to your bookmarks bar, then click it while viewing a flight on united.com.'); });
-  try {
-    if (F.importUnitedFromHash(state)) {
-      commit();
-      lookupNextDeparture();
-      const u = state.united;
-      unitedMsg('Loaded ' + state.flight.airline + state.flight.number + ' from united.com at ' + new Date(u.updated).toLocaleTimeString() +
-        (u.delayMin ? ' · delayed ' + u.delayMin + ' min' + (u.delayCause ? ' (' + u.delayCause + ')' : '') : '') +
-        ' · ' + state.upgrades.list.length + ' on upgrade list, ' + state.standby.list.length + ' on standby.');
-    }
-  } catch (e) {
-    unitedMsg('Could not read the United data: ' + e.message, true);
+  // Control tabs talk over a BroadcastChannel: a tab opened by the bookmark hands its message to an
+  // already-open control tab and closes itself, so bookmark clicks don't pile up tabs.
+  const bc = 'BroadcastChannel' in window ? new BroadcastChannel('fids-control') : null;
+  if (bc) bc.onmessage = (e) => {
+    if (e.data.type === 'ping') bc.postMessage({ type: 'pong' });
+    if (e.data.type === 'msg') unitedMsg(e.data.text, e.data.err);
+  };
+  function otherControlTabOpen() {
+    return new Promise((resolve) => {
+      if (!bc) return resolve(false);
+      const t = setTimeout(() => { bc.removeEventListener('message', on); resolve(false); }, 1500);   // background tabs can be slow to answer
+      const on = (e) => { if (e.data.type === 'pong') { clearTimeout(t); bc.removeEventListener('message', on); resolve(true); } };
+      bc.addEventListener('message', on);
+      bc.postMessage({ type: 'ping' });
+    });
   }
+  async function handOff(fresh) {
+    if (!fresh || !(await otherControlTabOpen())) return;
+    bc.postMessage({ type: 'msg', text: $('unitedMsg').textContent, err: $('unitedMsg').classList.contains('err') });
+    unitedMsg($('unitedMsg').textContent + ' Closing this tab...');
+    setTimeout(() => window.close(), 1200);   // allowed: this tab was opened by the bookmark's window.open
+  }
+
+  // Data arrives in the URL hash from the bookmark. An already-open control tab only sees a hash change
+  // (no reload), so run this on load and on every hashchange.
+  function runImports(fresh) {
+    let imported = false;
+    try {
+      if (F.importUnitedFromHash(state)) {
+        imported = true;
+        commit(); fillForm();
+        lookupNextDeparture();
+        const u = state.united;
+        unitedMsg('Loaded ' + state.flight.airline + state.flight.number + ' from united.com at ' + new Date(u.updated).toLocaleTimeString() +
+          (u.delayMin ? ' · delayed ' + u.delayMin + ' min' + (u.delayCause ? ' (' + u.delayCause + ')' : '') : '') +
+          ' · ' + state.upgrades.list.length + ' on upgrade list, ' + state.standby.list.length + ' on standby.');
+      }
+      const fv = F.importFlightViewFromHash(state);
+      if (fv) { imported = true; commit(); fillForm(); unitedMsg(fv.msg, !fv.ok); }
+    } catch (e) {
+      unitedMsg('Could not read the imported data: ' + e.message, true);
+    }
+    if (imported) handOff(fresh);
+  }
+  window.addEventListener('hashchange', () => runImports(false));
+  runImports(true);
 
   // Auto-refresh from the control page too (a shared lock stops the display double-fetching).
   setInterval(async () => {

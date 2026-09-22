@@ -86,7 +86,7 @@ window.FIDS = window.FIDS || {};
 
   // Gates are written differently by different sources ("C107", "107", "Gate C 107"): compare loosely.
   const normGate = (g) => String(g || '').toUpperCase().replace(/^GATE\s*/, '').replace(/[^A-Z0-9]/g, '');
-  const sameGate = (a, b) => {
+  const sameGate = F.sameGate = (a, b) => {
     a = normGate(a); b = normGate(b);
     if (!a || !b) return false;
     return a === b || a.replace(/^[A-Z]+/, '') === b || b.replace(/^[A-Z]+/, '') === a;

@@ -6,16 +6,47 @@ window.FIDS = window.FIDS || {};
 (function (F) {
   // Runs on united.com (serialised into a javascript: bookmark). Keep it self-contained.
   function grabUnited(target) {
+    var toast = function (msg) {
+      var n = document.createElement('div');
+      n.style.cssText = 'position:fixed;top:16px;right:16px;z-index:2147483647;background:#0c2340;color:#fff;padding:14px 18px;border-radius:8px;font:15px/1.4 sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.3);max-width:360px';
+      n.textContent = msg; document.body.appendChild(n); return n;
+    };
+    var send = function (key, payload, note) {
+      var url = target + '#' + key + '=' + encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(payload)))));
+      var w = window.open(url, 'fids-control');
+      if (w) { note.textContent = 'Sent to the gate display.'; setTimeout(function () { note.remove(); }, 4000); return; }
+      note.textContent = 'Data ready. ';                       // popup blocked: a real click on a link is always allowed
+      var a = document.createElement('a');
+      a.href = url; a.target = 'fids-control'; a.textContent = 'Send to gate display';
+      a.style.cssText = 'color:#8fc1ff;font-weight:bold';
+      a.onclick = function () { setTimeout(function () { note.remove(); }, 500); };
+      note.appendChild(a);
+    };
+
+    // FlightView airport departures page: send every departure with its gate (used for "Next departure").
+    if (location.hostname.indexOf('flightview.com') >= 0) {
+      var ap = location.pathname.match(/airport\/([A-Za-z]{3})/);
+      if (!ap) { alert("Open an airport's Departures page on FlightView, then click this bookmark again."); return; }
+      var code = ap[1].toUpperCase(), fvNote = toast('Grabbing ' + code + ' departures for the gate display...');
+      fetch('https://app-api.flightview.com/api/airport/' + code + '/departures', { credentials: 'include' })
+        .then(function (r) { if (!r.ok) throw new Error(r.status + ' from FlightView'); return r.json(); })
+        .then(function (list) {
+          send('fv', { airport: code, fetchedAt: new Date().toISOString(), departures: list.map(function (x) {
+            return { al: x.airlineCode, no: x.flightNumber, date: x.flightDate, sch: x.scheduledTime, upd: x.updatedTime,
+                     gate: x.gate, to: x.airportCode, toName: x.airport, st: x.displayStatus };
+          }) }, fvNote);
+        })
+        .catch(function (e) { fvNote.textContent = 'Could not grab departures: ' + e.message; });
+      return;
+    }
+
     var m = location.pathname.match(/flightstatus\/details\/(\d+)\/(\d{4}-\d{2}-\d{2})\/([A-Za-z]{3})\/([A-Za-z]{3})(?:\/([A-Za-z0-9]{2}))?/);
     if (location.hostname.indexOf('united.com') < 0 || !m) {
-      alert('Open a flight on united.com Flight Status (the flight details page), then click this bookmark again.');
+      alert("Open a flight on united.com Flight Status (the flight details page), or an airport's departures on FlightView, then click this bookmark again.");
       return;
     }
     var num = m[1], date = m[2], from = m[3].toUpperCase(), to = m[4].toUpperCase(), carrier = (m[5] || 'UA').toUpperCase();
-    var note = document.createElement('div');
-    note.style.cssText = 'position:fixed;top:16px;right:16px;z-index:2147483647;background:#0c2340;color:#fff;padding:14px 18px;border-radius:8px;font:15px/1.4 sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.3);max-width:360px';
-    note.textContent = 'Grabbing ' + carrier + num + ' for the gate display...';
-    document.body.appendChild(note);
+    var note = toast('Grabbing ' + carrier + num + ' for the gate display...');
     (async function () {
       try {
         var tok = await (await fetch('/api/auth/anonymous-token', { credentials: 'include' })).json();
@@ -35,21 +66,7 @@ window.FIDS = window.FIDS || {};
             '&equipmentCode=' + ((eq.Model && eq.Model.Key) || '') + '&tailNumber=' + (eq.TailNumber || '') + '&shipNumber=' + (eq.PseudoTailNumber || ''));
         } catch (e) {}
         try { upgrades = await get('/api/flightstatus/upgradeListExtended?flightNumber=' + num + '&flightDate=' + date + '&fromAirportCode=' + from); } catch (e) {}
-        var json = JSON.stringify({ fetchedAt: new Date().toISOString(), carrier: carrier, from: from, status: status, amenities: amenities, upgrades: upgrades });
-        var url = target + '#united=' + encodeURIComponent(btoa(unescape(encodeURIComponent(json))));
-        var w = window.open(url, 'fids-control');
-        if (w) {
-          note.textContent = 'Sent to the gate display.';
-          setTimeout(function () { note.remove(); }, 4000);
-        } else {
-          // Popup blocked: a real click on this link is always allowed.
-          note.textContent = 'Data ready. ';
-          var a = document.createElement('a');
-          a.href = url; a.target = 'fids-control'; a.textContent = 'Send to gate display';
-          a.style.cssText = 'color:#8fc1ff;font-weight:bold';
-          a.onclick = function () { setTimeout(function () { note.remove(); }, 500); };
-          note.appendChild(a);
-        }
+        send('united', { fetchedAt: new Date().toISOString(), carrier: carrier, from: from, status: status, amenities: amenities, upgrades: upgrades }, note);
       } catch (e) {
         note.textContent = 'Could not grab flight data: ' + e.message;
         setTimeout(function () { note.remove(); }, 8000);
@@ -62,14 +79,39 @@ window.FIDS = window.FIDS || {};
     return 'javascript:' + encodeURIComponent('(' + grabUnited.toString() + ')(' + JSON.stringify(target) + ')');
   };
 
+  const fromHash = (key) => {
+    const m = location.hash.match(new RegExp('(?:^#|&)' + key + '=([^&]+)'));
+    if (!m) return null;
+    history.replaceState(null, '', location.pathname + location.search);  // keep data out of the address bar
+    return JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(m[1])))));
+  };
+
   // Control page: apply data handed over in "#united=...". Returns the decoded payload, or null.
   F.importUnitedFromHash = function (s) {
-    const m = location.hash.match(/(?:^#|&)united=([^&]+)/);
-    if (!m) return null;
-    const data = JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(m[1])))));
-    F.applyUnited(s, data);
-    history.replaceState(null, '', location.pathname + location.search);  // keep names out of the address bar
+    const data = fromHash('united');
+    if (data) F.applyUnited(s, data);
     return data;
+  };
+
+  // Control page: "#fv=..." from FlightView. Sets the next departure from this gate; returns { msg, ok }, or null.
+  F.importFlightViewFromHash = function (s) {
+    const d = fromHash('fv');
+    if (!d) return null;
+    const f = s.flight;
+    if (d.airport !== (f.originCode || '').toUpperCase()) {
+      return { ok: false, msg: 'Those are ' + d.airport + ' departures, but this flight leaves from ' + (f.originCode || '?') + '.' };
+    }
+    const deps = d.departures.map((x) => ({ ...x, t: x.date + 'T' + (x.upd || x.sch) }));
+    const self = deps.find((x) => x.al === f.airline && String(x.no) === String(f.number));
+    if (!f.gate && self && self.gate) f.gate = self.gate;       // FlightView knows our gate too
+    if (!f.gate) return { ok: false, msg: 'This flight has no gate yet, so there is no next departure from its gate.' };
+    const dep = f.est || f.sched;
+    const next = deps.filter((x) => x.al === f.airline && F.sameGate(x.gate, f.gate) && x.t > dep && String(x.no) !== String(f.number))
+      .sort((a, b) => a.t.localeCompare(b.t))[0];
+    if (!next) return { ok: false, msg: 'FlightView lists no later ' + f.airline + ' departure from gate ' + f.gate + ' today.' };
+    s.next = { dest: F.airportLabel(next.to, next.toName), flight: next.al + next.no, time: next.t,
+               status: /delay/i.test(next.st) ? 'Delayed' : 'On Time' };
+    return { ok: true, msg: 'Next departure from gate ' + f.gate + ': ' + next.al + next.no + ' to ' + s.next.dest + ' at ' + F.fmtTime(next.t) + ' (FlightView).' };
   };
 
   const hhmm = (t) => (t || '').slice(0, 16);                          // "2026-09-22T10:59:00" -> local wall clock
