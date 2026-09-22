@@ -136,6 +136,10 @@ html, body {
 .countdown .l2 { font-size: 250px; font-weight: 500; line-height: 1; margin: 6px 0 10px; letter-spacing: -4px; }
 
 .soon, .closed { background: var(--frame); }
+.rp.delay { background: var(--frame); }
+.rp.delay .big { color: var(--delay); line-height: 1.05; }
+.rp.delay .sub b { font-weight: 700; }
+.rp.delay .reason { font-size: 40px; margin-top: 26px; padding: 10px 28px; border: 3px solid rgba(255,255,255,.7); border-radius: 50px; }
 .big { font-size: 96px; font-weight: 600; letter-spacing: -1px; }
 .sub { font-size: 44px; font-weight: 500; margin-top: 14px; max-width: 900px; }
 

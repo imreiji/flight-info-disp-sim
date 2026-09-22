@@ -100,3 +100,5 @@ code { background: var(--blue-soft); padding: 1px 5px; border-radius: 4px; }
 .list-editor .row textarea { flex: 1; min-width: 240px; }
 .preview { padding: 10px; }
 .disclaimer { color: var(--muted); font-size: 13px; text-align: center; margin: 8px 0 0; }
+.steps { margin: 0 0 10px; padding-left: 20px; display: grid; gap: 8px; }
+.bm { display: inline-block; background: var(--blue); color: #fff; font-weight: 600; text-decoration: none; padding: 5px 12px; border-radius: 16px; cursor: grab; }

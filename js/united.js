@@ -1,41 +1,75 @@
-// Client for the optional local helper (helper/united_helper.py), which reads united.com's own
-// flight-status data: live times/delays, amenities, and the upgrade/standby lists with capacity.
+// United live data, no install needed: a bookmarklet runs inside the user's own united.com Flight Status
+// tab, calls the same JSON endpoints that page uses (status, amenities, upgrade/standby lists), and opens
+// the control page with the data in the URL hash. Nothing is sent anywhere else.
 window.FIDS = window.FIDS || {};
 
 (function (F) {
-  const LOCK = 'fids.lastUnited';
-
-  F.fetchUnited = async function (s, force) {
-    const f = s.flight, u = s.united;
-    if (!f.number || !f.originCode || !f.destCode || !f.sched) throw new Error('Need flight number, origin, destination and date first.');
-    const q = new URLSearchParams({
-      flight: f.number, date: f.sched.slice(0, 10), from: f.originCode, to: f.destCode, carrier: f.airline || 'UA',
-    });
-    if (force) q.set('force', '1');
-    let res;
-    try {
-      res = await fetch(u.url.replace(/\/$/, '') + '/united?' + q);
-    } catch (e) {
-      throw new Error('Helper not reachable at ' + u.url + '. Is united_helper.py running?');
+  // Runs on united.com (serialised into a javascript: bookmark). Keep it self-contained.
+  function grabUnited(target) {
+    var m = location.pathname.match(/flightstatus\/details\/(\d+)\/(\d{4}-\d{2}-\d{2})\/([A-Za-z]{3})\/([A-Za-z]{3})(?:\/([A-Za-z0-9]{2}))?/);
+    if (location.hostname.indexOf('united.com') < 0 || !m) {
+      alert('Open a flight on united.com Flight Status (the flight details page), then click this bookmark again.');
+      return;
     }
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || res.status + ' from helper');
-    return data;
+    var num = m[1], date = m[2], from = m[3].toUpperCase(), to = m[4].toUpperCase(), carrier = (m[5] || 'UA').toUpperCase();
+    var note = document.createElement('div');
+    note.style.cssText = 'position:fixed;top:16px;right:16px;z-index:2147483647;background:#0c2340;color:#fff;padding:14px 18px;border-radius:8px;font:15px/1.4 sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.3);max-width:360px';
+    note.textContent = 'Grabbing ' + carrier + num + ' for the gate display...';
+    document.body.appendChild(note);
+    (async function () {
+      try {
+        var tok = await (await fetch('/api/auth/anonymous-token', { credentials: 'include' })).json();
+        var t = (tok.data && tok.data.token && (tok.data.token.hash || tok.data.token)) || tok.token;
+        var h = { 'x-authorization-api': 'bearer ' + t };
+        var get = async function (u) {
+          var r = await fetch(u, { credentials: 'include', headers: h });
+          if (!r.ok) throw new Error(r.status + ' for ' + u.split('?')[0]);
+          return r.json();
+        };
+        var status = await get('/api/flightstatus/status/' + num + '/' + date + '/' + from + '/' + to + '?carrierCode=' + carrier + '&useLegDestDate=true');
+        var seg = ((status.data.flightLegs || [])[0].OperationalFlightSegments || [])[0] || {};
+        var eq = seg.Equipment || {};
+        var amenities = null, upgrades = null;
+        try {
+          amenities = await get('/api/flightstatus/amenities/' + num + '/' + date + '/' + from + '/' + to + '?ownerAirlineCode=' + (eq.OwnerAirlineCode || '') +
+            '&equipmentCode=' + ((eq.Model && eq.Model.Key) || '') + '&tailNumber=' + (eq.TailNumber || '') + '&shipNumber=' + (eq.PseudoTailNumber || ''));
+        } catch (e) {}
+        try { upgrades = await get('/api/flightstatus/upgradeListExtended?flightNumber=' + num + '&flightDate=' + date + '&fromAirportCode=' + from); } catch (e) {}
+        var json = JSON.stringify({ fetchedAt: new Date().toISOString(), carrier: carrier, from: from, status: status, amenities: amenities, upgrades: upgrades });
+        var url = target + '#united=' + encodeURIComponent(btoa(unescape(encodeURIComponent(json))));
+        var w = window.open(url, 'fids-control');
+        if (w) {
+          note.textContent = 'Sent to the gate display.';
+          setTimeout(function () { note.remove(); }, 4000);
+        } else {
+          // Popup blocked: a real click on this link is always allowed.
+          note.textContent = 'Data ready. ';
+          var a = document.createElement('a');
+          a.href = url; a.target = 'fids-control'; a.textContent = 'Send to gate display';
+          a.style.cssText = 'color:#8fc1ff;font-weight:bold';
+          a.onclick = function () { setTimeout(function () { note.remove(); }, 500); };
+          note.appendChild(a);
+        }
+      } catch (e) {
+        note.textContent = 'Could not grab flight data: ' + e.message;
+        setTimeout(function () { note.remove(); }, 8000);
+      }
+    })();
+  }
+
+  // javascript: URL for the bookmark; `target` is this site's control page.
+  F.bookmarklet = function (target) {
+    return 'javascript:' + encodeURIComponent('(' + grabUnited.toString() + ')(' + JSON.stringify(target) + ')');
   };
 
-  // Scheduled refresh shared by the display and control pages (one fetch per interval).
-  F.refreshUnited = async function (s, force) {
-    const data = await F.fetchUnited(s, force);
+  // Control page: apply data handed over in "#united=...". Returns the decoded payload, or null.
+  F.importUnitedFromHash = function (s) {
+    const m = location.hash.match(/(?:^#|&)united=([^&]+)/);
+    if (!m) return null;
+    const data = JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(m[1])))));
     F.applyUnited(s, data);
-    return s;
-  };
-  F.claimUnited = function (ms) {
-    try {
-      const last = +localStorage.getItem(LOCK) || 0;
-      if (Date.now() - last < ms) return false;
-      localStorage.setItem(LOCK, String(Date.now()));
-    } catch (e) {}
-    return true;
+    history.replaceState(null, '', location.pathname + location.search);  // keep names out of the address bar
+    return data;
   };
 
   const hhmm = (t) => (t || '').slice(0, 16);                          // "2026-09-22T10:59:00" -> local wall clock
@@ -62,7 +96,8 @@ window.FIDS = window.FIDS || {};
 
   F.applyUnited = function (s, d) {
     const f = s.flight, x = { updated: d.fetchedAt || new Date().toISOString() };
-    const seg = pickSegment(d.status, f.originCode);
+    const seg = pickSegment(d.status, d.from || f.originCode);
+    if (d.carrier) f.airline = d.carrier;
 
     // ---- times, gate, status ----
     if (seg) {
@@ -73,6 +108,8 @@ window.FIDS = window.FIDS || {};
       const leg = byType('LegStatus'), dep = byType('DepartureStatus');
       const all = statuses.map((st) => st.Description).join(' ');
 
+      if (seg.FlightNumber) f.number = String(seg.FlightNumber);
+      if (code(seg.DepartureAirport)) f.originCode = code(seg.DepartureAirport);
       f.sched = sched;
       f.est = delay > 0 ? hhmm(seg.EstimatedDepartureTime) : '';
       f.arr = hhmm(seg.EstimatedArrivalTime) || hhmm(seg.ArrivalDateTime);
@@ -103,6 +140,9 @@ window.FIDS = window.FIDS || {};
       x.international = /true/i.test(seg.IsInternational);
       x.delayCause = ((seg.ReasonStatuses || []).find((r) => r.IsDelayEffective) || {}).CustomerFacingDescription || '';
       const sched0 = (((d.status.data.flightLegs || [])[0] || {}).ScheduledFlightSegments || [])[0] || {};
+      // Save the reason: "Late aircraft", else the detail in "Estimated Departure 51 Minutes Late (Awaiting aircraft)".
+      const detail = (x.reason.match(/\(([^)]+)\)/) || [])[1] || '';
+      f.delayReason = delay > 0 ? (x.delayCause || detail) : '';
       x.codeshares = (sched0.MarketedFlightSegment || []).map((m) => m.MarketingAirlineCode + m.FlightNumber);
       x.arrStatus = byType('ArrivalStatus');
       x.depStatus = dep;

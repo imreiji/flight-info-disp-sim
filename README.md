@@ -34,27 +34,19 @@ Auto-refresh re-pulls the selected flight every N minutes. If both the control p
 
 The upgrade and standby lists and the boarding progress are not in any public API, so they are always entered by hand.
 
-## United live data (optional local helper)
+## United live data (one-click bookmark)
 
-`helper/united_helper.py` reads the data united.com's own flight-status page loads, which covers nearly everything on the screen:
-live times and delay reason, gate, terminal, United's boarding time, aircraft and tail, inbound flight, weather, amenities,
-and the upgrade/standby lists with cabin capacity, booked and checked-in counts.
+The control page has a **Send to gate display** button. Drag it to your bookmarks bar once. Then open any flight's details
+page on [united.com Flight Status](https://www.united.com/en/us/flightstatus) and click the bookmark.
 
-It starts your installed Chrome normally (off-screen), attaches over the DevTools port, opens the flight's status page, and
-records the JSON responses. Run it on the same computer as the display:
+It runs inside your own united.com tab, calls the same JSON endpoints that page uses, and opens the control page with the
+data. That covers nearly everything on the screen: live times and delay reason, gate, terminal, United's boarding time,
+aircraft and tail, inbound flight, weather, amenities, and the upgrade/standby lists with capacity, booked and checked-in
+counts. Click it again to refresh. Nothing to install, and it works from the GitHub Pages site.
 
-```sh
-pip install playwright
-python helper/united_helper.py          # closes Chrome after each fetch; --show to watch it, --keep-open to leave it running
-```
-
-Then on the control page, fill in the flight number, origin, destination and date, tick **Use the United helper**, and click
-**Fetch from United now**. It refreshes on the same interval as the other data (results are cached for 2 minutes).
-
-Caveats: this is for personal, low-frequency use. Automated access is against united.com's terms, and it will break when the
-site changes. The upgrade/standby names (surname + initial, as shown publicly by United) stay in your browser only; they are
-never committed and are stripped from "Copy link for another device" snapshots. The next departure from the gate is not part
-of United's data; use AeroDataBox or type it in.
+The data only moves between your own browser tabs. Upgrade/standby names (surname + initial, as United shows them publicly)
+stay in your browser's storage, are never committed, and are left out of "Copy link for another device" snapshots.
+The next departure from the gate is not part of United's data; use AeroDataBox or type it in.
 
 ## Flight status page
 

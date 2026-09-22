@@ -209,25 +209,22 @@
     }
   };
 
-  // ---- United helper ----
+  // ---- United bookmarklet ----
   function unitedMsg(t, err) { $('unitedMsg').textContent = t; $('unitedMsg').className = 'msg' + (err ? ' err' : ''); }
-  function unitedDone() {
-    const u = state.united;
-    unitedMsg('Updated from united.com at ' + new Date(u.updated).toLocaleTimeString() +
-      (u.delayMin ? ' · delayed ' + u.delayMin + ' min' + (u.delayCause ? ' (' + u.delayCause + ')' : '') : '') +
-      ' · ' + state.upgrades.list.length + ' on upgrade list, ' + state.standby.list.length + ' on standby.');
+  const bm = $('bookmarklet');
+  bm.href = F.bookmarklet(location.origin + location.pathname);
+  bm.addEventListener('click', (e) => { e.preventDefault(); alert('Drag this button to your bookmarks bar, then click it while viewing a flight on united.com.'); });
+  try {
+    if (F.importUnitedFromHash(state)) {
+      commit();
+      const u = state.united;
+      unitedMsg('Loaded ' + state.flight.airline + state.flight.number + ' from united.com at ' + new Date(u.updated).toLocaleTimeString() +
+        (u.delayMin ? ' · delayed ' + u.delayMin + ' min' + (u.delayCause ? ' (' + u.delayCause + ')' : '') : '') +
+        ' · ' + state.upgrades.list.length + ' on upgrade list, ' + state.standby.list.length + ' on standby.');
+    }
+  } catch (e) {
+    unitedMsg('Could not read the United data: ' + e.message, true);
   }
-  $('unitedBtn').onclick = async () => {
-    unitedMsg('Fetching from united.com (about 10-20 s)...');
-    try { await F.refreshUnited(state, true); commit(); fillForm(); unitedDone(); }
-    catch (e) { unitedMsg(e.message, true); }
-  };
-  setInterval(async () => {
-    if (!state.united.enabled) return;
-    if (!F.claimUnited(Math.max(1, state.source.refreshMin) * 60000)) return;
-    try { await F.refreshUnited(state); commit(); fillForm(); unitedDone(); }
-    catch (e) { unitedMsg('Auto-refresh failed: ' + e.message, true); }
-  }, 30000);
 
   // Auto-refresh from the control page too (a shared lock stops the display double-fetching).
   setInterval(async () => {

@@ -86,20 +86,16 @@
       </details>
     </section>
 
-    <!-- ================= UNITED HELPER ================= -->
+    <!-- ================= UNITED BOOKMARKLET ================= -->
     <section class="card">
-      <h2>United live data <small>via the local helper</small></h2>
-      <p class="muted">Fills in live times and delays, gate, boarding time, amenities, and the upgrade/standby lists with capacity, all read from united.com.
-        Run <code>python helper/united_helper.py</code> on this computer first. It uses the flight number, origin, destination and date from <b>Flight details</b> below.
-        Passenger names stay in this browser only; they are left out of shared snapshot links.</p>
-      <div class="row">
-        <label class="inline"><input type="checkbox" data-path="united.enabled"> Use the United helper (refreshes on the interval above)</label>
-      </div>
-      <div class="row">
-        <label>Helper address<input data-path="united.url" placeholder="http://127.0.0.1:8787"></label>
-        <button id="unitedBtn" class="primary">Fetch from United now</button>
-        <a href="status.html" target="_blank" rel="noopener">Open flight status page &rarr;</a>
-      </div>
+      <h2>United live data <small>one click, nothing to install</small></h2>
+      <ol class="steps">
+        <li>Drag this button to your bookmarks bar (one time): <a id="bookmarklet" class="bm" href="#">Send to gate display</a></li>
+        <li>On <a href="https://www.united.com/en/us/flightstatus" target="_blank" rel="noopener">united.com Flight Status</a>, open your flight's details page.</li>
+        <li>Click the bookmark. This page opens with live times, delay, gate, boarding time, amenities, and the upgrade/standby lists with capacity.</li>
+      </ol>
+      <p class="muted">Click it again any time to refresh. The data goes straight from your united.com tab to this page in your browser; passenger names are never uploaded and are left out of shared snapshot links.
+        <a href="status.html" target="_blank" rel="noopener">Open flight status page &rarr;</a></p>
       <div class="row"><span id="unitedMsg" class="msg"></span></div>
     </section>
 
@@ -115,6 +111,7 @@
         <label class="span2">Destination as shown<input data-path="flight.destLabel" placeholder="Sacramento, CA (SMF)"></label>
         <label>Scheduled departure<input type="datetime-local" data-path="flight.sched"></label>
         <label>Estimated departure<input type="datetime-local" data-path="flight.est"></label>
+        <label>Delay reason<input data-path="flight.delayReason" placeholder="Late aircraft"></label>
         <label>Est. arrival (dest. local)<input type="datetime-local" data-path="flight.arr"></label>
         <label>UTC offset (min)<input type="number" data-path="flight.utcOffsetMin"></label>
         <label>Aircraft<input data-path="flight.aircraft"></label>

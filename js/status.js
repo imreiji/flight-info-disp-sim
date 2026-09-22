@@ -66,7 +66,7 @@
       banner = '<div class="banner cancel">' + I('delay') + '<div><b>This flight has been cancelled</b>Check the United app for rebooking options.</div></div>';
     } else if (late) {
       banner = '<div class="banner delay">' + I('delay') + '<div><b>We apologize for the delay</b>' +
-        esc(u.reason || 'Estimated departure ' + delay + ' minutes late') + (u.delayCause ? ' · ' + esc(u.delayCause) : '') + '</div></div>';
+        esc(u.reason || 'Estimated departure ' + delay + ' minutes late') + (f.delayReason ? ' · ' + esc(f.delayReason) : '') + '</div></div>';
     }
 
     const depTimes = late
@@ -119,7 +119,7 @@
         '</section>' +
         '<section class="card"><h2>Weather in ' + esc(cityOf(dest)) + '</h2>' +
           (u.weather ? '<div class="wx">' + I('weather') + '<div><b>' + esc(u.weather.tempF) + '°F</b> <span class="muted">' + esc(u.weather.tempC) + '°C</span><br>' + esc(u.weather.cond) + '</div></div>'
-                     : '<p class="empty">Weather is available with the United helper.</p>') +
+                     : '<p class="empty">Weather appears after loading the flight with the United bookmark.</p>') +
         '</section>' +
       '</div>' +
 

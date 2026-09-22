@@ -56,6 +56,7 @@ window.FIDS = window.FIDS || {};
         destLabel: 'Sacramento, CA (SMF)',
         sched: sched,
         est: '',
+        delayReason: '',         // e.g. "Late aircraft"; shown on the delay slide and status page
         arr: F.shiftLocal(sched, 50),
         gate: 'F5',
         terminal: '3',
@@ -106,11 +107,8 @@ window.FIDS = window.FIDS || {};
           { name: 'GAR, J.', ci: true, seat: '' },
         ],
       },
-      united: {
-        enabled: false,          // use the local united.com helper (helper/united_helper.py)
-        url: 'http://127.0.0.1:8787',
+      united: {                  // extra detail from the united.com bookmarklet (see js/united.js)
         updated: '',
-        error: '',
       },
       next: {
         dest: 'Bozeman, MT (BZN)',
