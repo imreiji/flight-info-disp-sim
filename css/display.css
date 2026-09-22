@@ -40,7 +40,7 @@ html, body {
   grid-template-rows: 146px 124px 1fr 78px;
   overflow: hidden;
 }
-.ic { width: 1em; height: 1em; vertical-align: -0.12em; flex: none; }
+.ic { width: 1em; height: 1em; vertical-align: -0.12em; flex: none; fill: currentColor; }
 
 /* ---------- header ---------- */
 .hdr { display: flex; align-items: center; padding: 0 0 0 56px; }

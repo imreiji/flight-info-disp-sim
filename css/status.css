@@ -1,0 +1,107 @@
+/* Flight status page, loosely modelled on united.com's flight-status details. */
+:root {
+  --bg: #f4f5f7;
+  --card: #ffffff;
+  --ink: #1b1c20;
+  --ink-2: #5b5e66;
+  --line: #d9dce1;
+  --navy: #0c2340;
+  --blue: #1f55e6;
+  --green: #1e7f3c;
+  --green-bg: #e3f4e8;
+  --amber: #8a5a00;
+  --amber-bg: #fff3d6;
+  --red: #c42127;
+  --red-bg: #fde7e8;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1218; --card: #181c24; --ink: #eceef2; --ink-2: #a3a9b5; --line: #2c323d;
+    --navy: #0a1a33; --blue: #6c9bff; --green: #6fd394; --green-bg: #173323;
+    --amber: #f3c56b; --amber-bg: #3a2e12; --red: #ff7b80; --red-bg: #3a1c1e;
+  }
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.45 "Figtree", "Segoe UI", Arial, sans-serif; }
+.ic { width: 1.1em; height: 1.1em; fill: currentColor; vertical-align: -0.2em; flex: none; }
+
+.top { background: var(--navy); color: #fff; display: flex; align-items: center; gap: 18px; padding: 14px 24px; }
+.top .logo { height: 26px; }
+.top-title { font-weight: 600; font-size: 17px; border-left: 1px solid rgba(255,255,255,.5); padding-left: 18px; }
+
+main { max-width: 1040px; margin: 0 auto; padding: 24px 16px 40px; display: grid; gap: 16px; }
+h1 { font-size: 28px; font-weight: 600; margin: 0; }
+h1 small { font-size: 16px; font-weight: 500; color: var(--ink-2); margin-left: 8px; }
+h2 { font-size: 20px; font-weight: 600; margin: 0 0 12px; }
+h3 { font-size: 15px; font-weight: 600; margin: 16px 0 6px; color: var(--ink-2); text-transform: uppercase; letter-spacing: .5px; }
+
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 20px 22px; }
+.banner { border-radius: 10px; padding: 14px 18px; display: flex; gap: 12px; align-items: flex-start; }
+.banner .ic { width: 26px; height: 26px; margin-top: 2px; }
+.banner b { display: block; }
+.banner.delay { background: var(--amber-bg); color: var(--amber); }
+.banner.cancel { background: var(--red-bg); color: var(--red); }
+
+.fl-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; align-items: baseline; }
+.fl-no { font-size: 22px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.muted { color: var(--ink-2); font-size: 14px; }
+
+.legs { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 18px; }
+.leg .lbl { font-size: 13px; font-weight: 600; letter-spacing: 1px; color: var(--ink-2); display: flex; align-items: center; gap: 6px; }
+.chip { display: inline-block; font-size: 13px; font-weight: 600; border-radius: 20px; padding: 2px 12px; margin: 8px 0 4px; background: var(--green-bg); color: var(--green); }
+.chip.delayed { background: var(--amber-bg); color: var(--amber); }
+.chip.cancelled { background: var(--red-bg); color: var(--red); }
+.chip.departed { background: var(--line); color: var(--ink); }
+.code { font-size: 44px; font-weight: 700; line-height: 1.05; }
+.city { color: var(--ink-2); }
+.times { margin: 12px 0; }
+.times .big { font-size: 22px; font-weight: 600; }
+.times .late { color: var(--amber); }
+.times s { color: var(--ink-2); }
+.facts { display: flex; gap: 28px; margin-top: 8px; }
+.facts div span { display: block; font-size: 13px; color: var(--ink-2); }
+.facts div b { font-size: 20px; }
+
+.track { display: flex; align-items: center; gap: 10px; margin-top: 18px; color: var(--ink-2); }
+.track i { flex: 1; height: 3px; background: var(--line); border-radius: 2px; position: relative; }
+.track i b { position: absolute; inset: 0 auto 0 0; background: var(--blue); border-radius: 2px; }
+.track .ic { color: var(--blue); width: 24px; height: 24px; }
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; }
+dt { color: var(--ink-2); }
+dd { margin: 0; }
+.inbound { margin-top: 14px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; }
+
+.amen { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+.amen li { display: flex; gap: 12px; }
+.amen .ic { width: 26px; height: 26px; margin-top: 2px; }
+.amen b { display: block; }
+
+.avail { display: flex; flex-wrap: wrap; gap: 8px 24px; margin-bottom: 8px; }
+.avail .full { color: var(--red); font-weight: 600; }
+.avail .open { color: var(--green); font-weight: 600; }
+.stats { display: flex; gap: 28px; margin: 4px 0 8px; }
+.stats div span { display: block; font-size: 13px; color: var(--ink-2); }
+.stats div b { font-size: 22px; }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-size: 13px; color: var(--ink-2); font-weight: 600; padding: 6px 4px; border-bottom: 1px solid var(--line); }
+td { padding: 7px 4px; border-bottom: 1px solid var(--line); }
+td.ok { color: var(--green); }
+tr.cleared td { background: var(--green-bg); }
+.empty { color: var(--ink-2); font-style: italic; }
+.note { font-size: 13px; color: var(--ink-2); margin-top: 10px; }
+
+.wx { display: flex; align-items: center; gap: 16px; }
+.wx .ic { width: 44px; height: 44px; color: var(--blue); }
+.wx b { font-size: 28px; }
+
+.foot { text-align: center; color: var(--ink-2); font-size: 13px; padding: 0 16px 28px; }
+
+@media (max-width: 720px) {
+  .legs, .grid2 { grid-template-columns: 1fr; }
+  .code { font-size: 36px; }
+  .top { padding: 12px 16px; }
+}

@@ -8,6 +8,7 @@ It has no backend, so it runs on GitHub Pages.
 
 - `index.html`: the display, a 1920x1080 layout scaled to fit any screen. Double-click or press `F` for fullscreen. `←` / `→` change the boarding group.
 - `control.html`: the config and control page.
+- `status.html`: a flight status page for the same flight.
 
 ## Running it
 
@@ -33,6 +34,33 @@ Auto-refresh re-pulls the selected flight every N minutes. If both the control p
 
 The upgrade and standby lists and the boarding progress are not in any public API, so they are always entered by hand.
 
+## United live data (optional local helper)
+
+`helper/united_helper.py` reads the data united.com's own flight-status page loads, which covers nearly everything on the screen:
+live times and delay reason, gate, terminal, United's boarding time, aircraft and tail, inbound flight, weather, amenities,
+and the upgrade/standby lists with cabin capacity, booked and checked-in counts.
+
+It starts your installed Chrome normally (off-screen), attaches over the DevTools port, opens the flight's status page, and
+records the JSON responses. Run it on the same computer as the display:
+
+```sh
+pip install playwright
+python helper/united_helper.py          # closes Chrome after each fetch; --show to watch it, --keep-open to leave it running
+```
+
+Then on the control page, fill in the flight number, origin, destination and date, tick **Use the United helper**, and click
+**Fetch from United now**. It refreshes on the same interval as the other data (results are cached for 2 minutes).
+
+Caveats: this is for personal, low-frequency use. Automated access is against united.com's terms, and it will break when the
+site changes. The upgrade/standby names (surname + initial, as shown publicly by United) stay in your browser only; they are
+never committed and are stripped from "Copy link for another device" snapshots. The next departure from the gate is not part
+of United's data; use AeroDataBox or type it in.
+
+## Flight status page
+
+`status.html` shows the current flight like an airline status page: delay banner, departure/arrival with gates, aircraft and
+inbound flight, weather, amenities, and the standby and upgrade lists. It uses the same shared state as the display.
+
 ## How the pages sync
 
 Pages on the **same browser** share state through localStorage, so edits on `control.html` show up on the display right away (for example, a laptop driving a TV over HDMI).
@@ -42,6 +70,7 @@ For a **different device**, use **Copy link for another device**. It puts a snap
 ## Assets
 
 - `assets/united-lockup.png` and `assets/star-alliance.png`: header logos (trimmed, resized, and the star lightened to white). They are trademarks of their owners and are used here only for this non-commercial fan project. **Logo image** on the control page overrides the whole header lockup.
-- `assets/qr-assistance.png`: the "Need assistance?" QR code on the Flight tab, also used on the app promo. If it's missing, the Flight tab shows the estimated arrival instead.
+- `assets/qr-assistance.png`: the "Need assistance?" QR code (links to United's travel help page), also used on the app promo. If it's missing, the Flight tab shows the estimated arrival instead.
+- `assets/icons/united-sprite.svg`: United's icon sprite from united.com, used for amenities and labels.
 
 Reference photos go in `ref/` (ignored by git). Colors and sizes are CSS variables at the top of `css/display.css`.

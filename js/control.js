@@ -209,6 +209,26 @@
     }
   };
 
+  // ---- United helper ----
+  function unitedMsg(t, err) { $('unitedMsg').textContent = t; $('unitedMsg').className = 'msg' + (err ? ' err' : ''); }
+  function unitedDone() {
+    const u = state.united;
+    unitedMsg('Updated from united.com at ' + new Date(u.updated).toLocaleTimeString() +
+      (u.delayMin ? ' · delayed ' + u.delayMin + ' min' + (u.delayCause ? ' (' + u.delayCause + ')' : '') : '') +
+      ' · ' + state.upgrades.list.length + ' on upgrade list, ' + state.standby.list.length + ' on standby.');
+  }
+  $('unitedBtn').onclick = async () => {
+    unitedMsg('Fetching from united.com (about 10-20 s)...');
+    try { await F.refreshUnited(state, true); commit(); fillForm(); unitedDone(); }
+    catch (e) { unitedMsg(e.message, true); }
+  };
+  setInterval(async () => {
+    if (!state.united.enabled) return;
+    if (!F.claimUnited(Math.max(1, state.source.refreshMin) * 60000)) return;
+    try { await F.refreshUnited(state); commit(); fillForm(); unitedDone(); }
+    catch (e) { unitedMsg('Auto-refresh failed: ' + e.message, true); }
+  }, 30000);
+
   // Auto-refresh from the control page too (a shared lock stops the display double-fetching).
   setInterval(async () => {
     const src = state.source;
@@ -223,8 +243,10 @@
   $('copyLink').onclick = async () => {
     const withKey = F.getKey() && confirm('Include your API key in the link so that device can auto-refresh?\n\nOnly do this for devices you trust.');
     const url = new URL('index.html', location.href);
-    url.hash = 's=' + encodeURIComponent(F.encodeState(state)) + (withKey ? '&k=' + encodeURIComponent(F.getKey()) : '');
-    try { await navigator.clipboard.writeText(url.href); alert('Link copied. It is a snapshot: later edits here will not reach that device.'); }
+    const snap = JSON.parse(JSON.stringify(state));
+    snap.upgrades.list = []; snap.standby.list = [];
+    url.hash = 's=' + encodeURIComponent(F.encodeState(snap)) + (withKey ? '&k=' + encodeURIComponent(F.getKey()) : '');
+    try { await navigator.clipboard.writeText(url.href); alert('Link copied. It is a snapshot without passenger names: later edits here will not reach that device.'); }
     catch (e) { prompt('Copy this link:', url.href); }
   };
   $('reset').onclick = () => {

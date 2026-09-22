@@ -1,2 +1,4 @@
 ref/*
 !ref/.gitkeep
+helper/.chrome-profile/
+__pycache__/

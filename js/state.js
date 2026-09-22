@@ -106,6 +106,12 @@ window.FIDS = window.FIDS || {};
           { name: 'GAR, J.', ci: true, seat: '' },
         ],
       },
+      united: {
+        enabled: false,          // use the local united.com helper (helper/united_helper.py)
+        url: 'http://127.0.0.1:8787',
+        updated: '',
+        error: '',
+      },
       next: {
         dest: 'Bozeman, MT (BZN)',
         flight: 'UA562',
@@ -247,7 +253,7 @@ window.FIDS = window.FIDS || {};
     const minsToBoard = Math.max(0, Math.ceil((boardT - now) / 60000));
 
     let pill = b.pill;
-    if (pill === 'auto') pill = api.startsWith('cancel') ? 'cancelled' : delayMin >= 5 ? 'delayed' : 'ontime';
+    if (pill === 'auto') pill = api.startsWith('cancel') ? 'cancelled' : delayMin >= 5 || api === 'delayed' ? 'delayed' : 'ontime';
 
     let phase = b.phase, group = Math.max(0, Math.min(F.LAST_GROUP, +b.group || 0));
     if (phase === 'auto' && isFinite(depT)) {

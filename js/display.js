@@ -258,6 +258,26 @@
     }
   }
 
+  // United helper (optional): live times, amenities and upgrade/standby lists from united.com.
+  async function unitedRefresh() {
+    const u = state.united;
+    if (!u.enabled) return;
+    const interval = Math.max(1, state.source.refreshMin) * 60000;
+    if (F.isSnapshot()) {
+      if (Date.now() - (unitedRefresh.last || 0) < interval) return;
+      unitedRefresh.last = Date.now();
+    } else if (!F.claimUnited(interval)) return;
+    try {
+      await F.refreshUnited(state);
+      F.save(state);
+      $('err').hidden = true;
+      render();
+    } catch (e) {
+      $('err').textContent = 'United helper: ' + e.message;
+      $('err').hidden = false;
+    }
+  }
+
   // Keyboard: arrows step through boarding groups, F toggles fullscreen.
   document.addEventListener('keydown', (e) => {
     if (e.key === 'f' || e.key === 'F') toggleFullscreen();
@@ -289,5 +309,7 @@
   render();
   setInterval(render, 1000);
   setInterval(autoRefresh, 30000);
+  setInterval(unitedRefresh, 30000);
   autoRefresh();
+  unitedRefresh();
 })(window.FIDS);
