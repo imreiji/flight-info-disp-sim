@@ -28,6 +28,19 @@
     $('keyState').textContent = F.getKey() ? 'saved' : 'not set';
     renderBoarding();
     listEditors.forEach((ed) => ed.render());
+    updateUnitedLink();
+  }
+
+  // Deep link to the flight's united.com details page, built from Flight details.
+  function updateUnitedLink() {
+    const f = state.flight, a = $('uaLink');
+    const num = String(f.number || '').replace(/\D/g, ''), date = (f.sched || '').slice(0, 10);
+    const from = (f.originCode || '').toUpperCase(), to = (f.destCode || '').toUpperCase();
+    const ok = num && date && from.length === 3 && to.length === 3;
+    a.href = ok ? 'https://www.united.com/en/us/flightstatus/details/' + num + '/' + date + '/' + from + '/' + to + '/' + (f.airline || 'UA').toUpperCase()
+                : 'https://www.united.com/en/us/flightstatus';
+    a.textContent = ok ? (f.airline || 'UA') + num + ' ' + from + '–' + to + ' on ' + date + ' on united.com' : 'United Flight Status';
+    $('uaLinkNote').textContent = ok ? '' : '(fill in flight number, origin, destination and scheduled departure below for a direct link)';
   }
 
   function commit() { F.save(state); }
@@ -42,6 +55,7 @@
       else v = el.value;
       setPath(el.dataset.path, v);
       commit();
+      if (el.dataset.path.startsWith('flight.')) updateUnitedLink();
       if (el.type === 'radio' || el.tagName === 'SELECT') fillForm();
     });
   });
