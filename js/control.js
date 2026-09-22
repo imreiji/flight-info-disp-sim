@@ -319,17 +319,22 @@
 
   // Data arrives in the URL hash from the bookmark. An already-open control tab only sees a hash change
   // (no reload), so run this on load and on every hashchange.
+  function unitedLoaded(auto) {
+    const u = state.united;
+    unitedMsg((auto ? 'Auto-refreshed ' : 'Loaded ') + state.flight.airline + state.flight.number + ' from united.com at ' + new Date(u.updated).toLocaleTimeString() +
+      (u.delayMin ? ' · delayed ' + u.delayMin + ' min' + (u.delayCause ? ' (' + u.delayCause + ')' : '') : '') +
+      ' · ' + state.upgrades.list.length + ' on upgrade list, ' + state.standby.list.length + ' on standby.' +
+      (auto ? ' Keep this tab and the united.com tab open for updates every few minutes.' : ''));
+  }
   function runImports(fresh) {
-    let imported = false;
+    let imported = false, auto = false;
     try {
-      if (F.importUnitedFromHash(state)) {
-        imported = true;
+      const d = F.importUnitedFromHash(state);
+      if (d) {
+        imported = true; auto = !!d.auto;
         commit(); fillForm();
         lookupNextDeparture();
-        const u = state.united;
-        unitedMsg('Loaded ' + state.flight.airline + state.flight.number + ' from united.com at ' + new Date(u.updated).toLocaleTimeString() +
-          (u.delayMin ? ' · delayed ' + u.delayMin + ' min' + (u.delayCause ? ' (' + u.delayCause + ')' : '') : '') +
-          ' · ' + state.upgrades.list.length + ' on upgrade list, ' + state.standby.list.length + ' on standby.');
+        unitedLoaded(auto);
       }
       const fv = F.importFlightViewFromHash(state);
       if (fv) {
@@ -340,8 +345,16 @@
     } catch (e) {
       unitedMsg('Could not read the imported data: ' + e.message, true);
     }
-    if (imported) handOff(fresh);
+    // An auto-refreshing united.com tab keeps sending to this tab, so it stays open instead of handing off.
+    if (imported && !auto) handOff(fresh);
   }
+  // Later updates from the auto-refreshing united.com tab (see grabUnited in js/united.js).
+  window.addEventListener('message', (e) => {
+    if (!/^https:\/\/([a-z0-9-]+\.)*united\.com$/.test(e.origin) || !e.data || e.data.type !== 'fids-united') return;
+    if (state.flight.lock) return unitedMsg('Skipped an auto-refresh from united.com at ' + new Date().toLocaleTimeString() + ': Freeze details is on.');
+    try { F.applyUnited(state, e.data.payload); commit(); fillForm(); unitedLoaded(true); }
+    catch (err) { unitedMsg('Could not read the auto-refresh from united.com: ' + err.message, true); }
+  });
   window.addEventListener('hashchange', () => runImports(false));
   runImports(true);
   renderPicker();

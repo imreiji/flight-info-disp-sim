@@ -1,6 +1,7 @@
 // United live data, no install needed: a bookmarklet runs inside the user's own united.com Flight Status
 // tab, calls the same JSON endpoints that page uses (status, amenities, upgrade/standby lists), and opens
-// the control page with the data in the URL hash. Nothing is sent anywhere else.
+// the control page with the data in the URL hash. It then keeps refreshing while that tab stays open and
+// posts each update to the control tab. Nothing is sent anywhere else.
 window.FIDS = window.FIDS || {};
 
 (function (F) {
@@ -11,15 +12,21 @@ window.FIDS = window.FIDS || {};
       n.style.cssText = 'position:fixed;top:16px;right:16px;z-index:2147483647;background:#0c2340;color:#fff;padding:14px 18px;border-radius:8px;font:15px/1.4 sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.3);max-width:360px';
       n.textContent = msg; document.body.appendChild(n); return n;
     };
-    var send = function (key, payload, note) {
+    // onWin (optional) gets the control tab's window, so later updates can go to it with postMessage.
+    var send = function (key, payload, note, onWin) {
       var url = target + '#' + key + '=' + encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(payload)))));
       var w = window.open(url, 'fids-control');
-      if (w) { note.textContent = 'Sent to the gate display.'; setTimeout(function () { note.remove(); }, 4000); return; }
+      if (w) { if (onWin) onWin(w); note.textContent = 'Sent to the gate display.'; setTimeout(function () { note.remove(); }, 4000); return; }
       note.textContent = 'Data ready. ';                       // popup blocked: a real click on a link is always allowed
       var a = document.createElement('a');
       a.href = url; a.target = 'fids-control'; a.textContent = 'Send to gate display';
       a.style.cssText = 'color:#8fc1ff;font-weight:bold';
-      a.onclick = function () { setTimeout(function () { note.remove(); }, 500); };
+      a.onclick = function (e) {
+        e.preventDefault();
+        var w2 = window.open(url, 'fids-control');
+        if (w2 && onWin) onWin(w2);
+        setTimeout(function () { note.remove(); }, 500);
+      };
       note.appendChild(a);
     };
 
@@ -47,6 +54,60 @@ window.FIDS = window.FIDS || {};
     }
     var num = m[1], date = m[2], from = m[3].toUpperCase(), to = m[4].toUpperCase(), carrier = (m[5] || 'UA').toUpperCase();
     var note = toast('Grabbing ' + carrier + num + ' for the gate display...');
+
+    // Auto-refresh: this tab keeps clicking united.com's own "Refresh now" (the page never refreshes by itself),
+    // reads the answers from the page's XHRs, and posts them to the control tab. State lives on the window,
+    // so clicking the bookmark again only reconnects instead of starting a second loop.
+    var EVERY_MIN = 5;
+    var S = window.__fidsAuto || (window.__fidsAuto = { cap: {} });
+    var hm = function () { return new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); };
+    var badge = function (msg) {
+      if (!S.badge) {
+        S.badge = toast('');
+        S.badge.style.top = 'auto'; S.badge.style.bottom = '16px'; S.badge.style.fontSize = '13px';
+        S.badge.appendChild(document.createElement('span'));
+        var stop = document.createElement('a');
+        stop.href = '#'; stop.textContent = ' Stop'; stop.style.cssText = 'color:#8fc1ff;font-weight:bold;margin-left:6px';
+        stop.onclick = function (e) { e.preventDefault(); clearInterval(S.timer); S.timer = null; S.badge.remove(); S.badge = null; };
+        S.badge.appendChild(stop);
+      }
+      S.badge.firstChild.textContent = 'Gate display: ' + msg;
+    };
+    if (!S.hooked) {
+      S.hooked = true;
+      var xopen = XMLHttpRequest.prototype.open;
+      XMLHttpRequest.prototype.open = function (method, url) {
+        var x = this, u = String(url);
+        var k = /flightstatus\/status\//.test(u) ? 'status' : /flightstatus\/amenities\//.test(u) ? 'amenities' : /upgradeListExtended/.test(u) ? 'upgrades' : '';
+        if (k) x.addEventListener('load', function () {
+          if (x.status < 200 || x.status >= 300) return;
+          try { S.cap[k] = { at: Date.now(), data: x.response && typeof x.response === 'object' ? x.response : JSON.parse(x.responseText) }; } catch (e) {}
+        });
+        return xopen.apply(this, arguments);
+      };
+    }
+    var tick = function () {
+      if (!S.win || S.win.closed) return badge('the control page was closed. Click the bookmark to reconnect.');
+      var p = location.pathname.match(/flightstatus\/details\/(\d+)\/(\d{4}-\d{2}-\d{2})\/([A-Za-z]{3})\/([A-Za-z]{3})(?:\/([A-Za-z0-9]{2}))?/);
+      if (!p) return badge('paused. Open a flight details page to keep refreshing.');
+      var btn = [].filter.call(document.querySelectorAll('a,button'), function (e) { return /^\s*refresh now\s*$/i.test(e.textContent); })[0];
+      if (!btn) return badge('could not find "Refresh now" on this page.');
+      var t0 = Date.now();
+      btn.click();
+      setTimeout(function () {
+        var c = S.cap;
+        if (!c.status || c.status.at < t0) return badge('united.com sent no new data at ' + hm() + '. Trying again in ' + EVERY_MIN + ' min.');
+        S.win.postMessage({ type: 'fids-united', payload: { fetchedAt: new Date(c.status.at).toISOString(), carrier: (p[5] || 'UA').toUpperCase(), from: p[3].toUpperCase(), auto: true,
+          status: c.status.data, amenities: c.amenities ? c.amenities.data : null, upgrades: c.upgrades ? c.upgrades.data : null } }, new URL(target).origin);
+        badge('refreshed at ' + hm() + '. Next in ' + EVERY_MIN + ' min. Keep this tab open.');
+      }, 8000);
+    };
+    var connect = function (w) {
+      S.win = w;
+      if (!S.timer) S.timer = setInterval(tick, EVERY_MIN * 60000);
+      badge('auto-refresh every ' + EVERY_MIN + ' min. Keep this tab open.');
+    };
+
     (async function () {
       try {
         var tok = await (await fetch('/api/auth/anonymous-token', { credentials: 'include' })).json();
@@ -66,7 +127,11 @@ window.FIDS = window.FIDS || {};
             '&equipmentCode=' + ((eq.Model && eq.Model.Key) || '') + '&tailNumber=' + (eq.TailNumber || '') + '&shipNumber=' + (eq.PseudoTailNumber || eq.NoseNumber || ''));
         } catch (e) {}
         try { upgrades = await get('/api/flightstatus/upgradeListExtended?flightNumber=' + num + '&flightDate=' + date + '&fromAirportCode=' + from); } catch (e) {}
-        send('united', { fetchedAt: new Date().toISOString(), carrier: carrier, from: from, status: status, amenities: amenities, upgrades: upgrades }, note);
+        var now = Date.now();
+        S.cap = { status: { at: now, data: status } };
+        if (amenities) S.cap.amenities = { at: now, data: amenities };
+        if (upgrades) S.cap.upgrades = { at: now, data: upgrades };
+        send('united', { fetchedAt: new Date(now).toISOString(), carrier: carrier, from: from, auto: true, status: status, amenities: amenities, upgrades: upgrades }, note, connect);
       } catch (e) {
         note.textContent = 'Could not grab flight data: ' + e.message;
         setTimeout(function () { note.remove(); }, 8000);

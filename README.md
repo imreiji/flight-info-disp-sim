@@ -42,7 +42,14 @@ page on [united.com Flight Status](https://www.united.com/en/us/flightstatus) an
 It runs inside your own united.com tab, calls the same JSON endpoints that page uses, and opens the control page with the
 data. That covers nearly everything on the screen: live times and delay reason, gate, terminal, United's boarding time,
 aircraft and tail, inbound flight, weather, amenities, and the upgrade/standby lists with capacity, booked and checked-in
-counts. Click it again to refresh. Nothing to install, and it works from the GitHub Pages site.
+counts. Nothing to install, and it works from the GitHub Pages site.
+
+**Auto-refresh:** united.com's flight page never refreshes by itself. After you click the bookmark, the united.com tab
+clicks the page's own "Refresh now" every 5 minutes and sends the new data to the control page. A small note in the
+corner of the united.com page shows the last refresh and has a Stop link. Both tabs must stay open, but they can be in
+the background. If Chrome's Memory Saver puts the united.com tab to sleep, the updates stop: add `united.com` under
+Settings → Performance → "Always keep these sites active". Updates are skipped while **Freeze details** is ticked.
+Click the bookmark again to refresh right away, or to reconnect after closing the control page.
 
 The data only moves between your own browser tabs. Upgrade/standby names (surname + initial, as United shows them publicly)
 stay in your browser's storage, are never committed, and are left out of "Copy link for another device" snapshots.
