@@ -58,8 +58,9 @@
     const late = d.pill === 'delayed' && f.est;
     const delay = u.delayMin || d.delayMin;
     const chip = (txt, cls) => '<span class="chip ' + cls + '">' + esc(txt) + '</span>';
-    const pillCls = d.phase === 'departed' ? 'departed' : d.pill;
-    const pillTxt = d.phase === 'departed' ? 'Departed' : F.PILLS[d.pill];
+    const departed = /departed|enroute|in flight|arrived|landed|approaching/i.test(f.apiStatus);
+    const pillCls = departed ? 'departed' : d.pill;
+    const pillTxt = departed ? 'Departed' : F.PILLS[d.pill];
 
     let banner = '';
     if (d.pill === 'cancelled') {
@@ -76,7 +77,7 @@
     const arrTimes = arrLate
       ? '<div class="big late">Estimated: ' + t(f.arr) + '</div><div>Scheduled: <s>' + t(u.arrSched) + '</s> · ' + u.arrDelayMin + ' mins late</div>'
       : f.arr ? '<div class="big">' + (u.arrSched ? 'Scheduled: ' : 'Estimated: ') + t(f.arr) + '</div>' : '';
-    const progress = d.phase === 'departed' ? (/arriv|landed/i.test(f.apiStatus) ? 100 : 50) : 0;
+    const progress = departed ? (/arriv|landed/i.test(f.apiStatus) ? 100 : 50) : 0;
 
     const ai = u.aircraftInfo || {};
     const ib = u.inbound;

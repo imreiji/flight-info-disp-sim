@@ -209,6 +209,20 @@
     }
   };
 
+  // Next departure from this gate: United's site has no by-gate list, so this uses AeroDataBox (key needed).
+  async function lookupNextDeparture() {
+    const key = F.getKey(), f = state.flight;
+    if (!key || !f.gate || !f.originCode) return;
+    try {
+      const dep = f.est || f.sched;
+      const list = await F.api.byAirport(key, f.originCode, dep, F.shiftLocal(dep, 11 * 60), { airline: f.airline });
+      F.applyNext(state, F.pickNext(state, list));
+      commit(); fillForm();
+    } catch (e) {
+      unitedMsg('Next departure lookup failed: ' + e.message, true);
+    }
+  }
+
   // ---- United bookmarklet ----
   function unitedMsg(t, err) { $('unitedMsg').textContent = t; $('unitedMsg').className = 'msg' + (err ? ' err' : ''); }
   const bm = $('bookmarklet');
@@ -216,7 +230,9 @@
   bm.addEventListener('click', (e) => { e.preventDefault(); alert('Drag this button to your bookmarks bar, then click it while viewing a flight on united.com.'); });
   try {
     if (F.importUnitedFromHash(state)) {
+      state.next = { dest: '', flight: '', time: '', status: '' };   // never show a stale/demo next departure
       commit();
+      lookupNextDeparture();
       const u = state.united;
       unitedMsg('Loaded ' + state.flight.airline + state.flight.number + ' from united.com at ' + new Date(u.updated).toLocaleTimeString() +
         (u.delayMin ? ' · delayed ' + u.delayMin + ' min' + (u.delayCause ? ' (' + u.delayCause + ')' : '') : '') +

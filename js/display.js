@@ -81,7 +81,7 @@
     if (a.food) col2.push(amenity('food', 'Food ' + a.food));
     if (a.beverages) col2.push(amenity('cup', 'Beverages'));
     const foot = qr.ok
-      ? '<div class="p-foot"><img src="' + esc(qr.url) + '" alt=""><div><b>Need assistance?</b><span>Scan the QR code to talk to an agent.</span></div></div>'
+      ? '<div class="p-foot"><img src="' + esc(qr.url) + '" alt=""><div><b>Need assistance?</b><span>Scan the QR code to view your flight options, talk to an agent and more.</span></div></div>'
       : f.arr ? '<div class="arrival">' + I('land') + 'Est. arrival<b>' + F.fmtTime(f.arr, c24) + '</b></div>' : '';
     return '<div class="p-title">Inflight amenities</div>' +
       '<div class="amen"><div>' + col1.join('') + '</div><div>' + col2.join('') + '</div></div>' + foot;
@@ -172,6 +172,18 @@
       (f.delayReason ? '<div class="reason">Reason: ' + esc(f.delayReason) + '</div>' : '') + '</div></div>';
   }
 
+  // Who may preboard, as listed on United's gate screens (icons from United's own sprite).
+  const PREBOARD = [
+    ['special-needs', 'pb-yellow', 'Accessibility assistance'],
+    ['active-duty', 'pb-green', 'Active military personnel'],
+    ['GS', 'pb-gs', 'United Global Services®'],
+    ['stroller', 'pb-purple', 'Families with children age 2 and under'],
+  ];
+  function preboardSlide() {
+    return '<div class="rp preboard"><div class="strip">Preboarding now</div><ul>' + PREBOARD.map(([ic, cls, txt]) =>
+      '<li><span class="pb-ic ' + cls + '">' + (ic === 'GS' ? 'GS' : I(ic)) + '</span>' + txt + '</li>').join('') + '</ul></div>';
+  }
+
   function renderRight(s, d, c24) {
     let html;
     const sec = s.display.panelSec;
@@ -194,6 +206,7 @@
         break;
       case 'boarding': {
         const g = d.group;
+        if (g === 0) { html = preboardSlide(); break; }
         // While groups 1 and 2 board, alternate with the "Groups 3-6 have a seat" view.
         if ((g === 1 || g === 2) && slot(sec, 2) === 1) {
           html = '<div class="rp seatview"><div class="bar"></div><div class="center"><div class="big">Groups 3-' + F.LAST_GROUP +
@@ -211,13 +224,7 @@
           '<div class="sub">Final boarding</div></div></div><div class="stripes"><i></i><i></i></div></div>';
         break;
       case 'closed':
-        html = '<div class="rp closed"><div class="center"><div class="big">Boarding door closed</div><div class="sub">This flight is no longer boarding</div></div></div>';
-        break;
-      case 'departed':
-        html = '<div class="rp closed"><div class="center"><div class="big">Departed</div><div class="sub">Have a great flight</div></div></div>';
-        break;
-      case 'cancelled':
-        html = '<div class="rp closed"><div class="center"><div class="big">Flight cancelled</div><div class="sub">Check the United app for rebooking options</div></div></div>';
+        html = '<div class="rp closed"><div class="center"><div class="big">Boarding closed</div></div></div>';
         break;
       default:
         html = '';

@@ -20,9 +20,7 @@ window.FIDS = window.FIDS || {};
     soon: 'Boarding soon',
     boarding: 'Boarding groups',
     final: 'Final boarding',
-    closed: 'Door closed',
-    departed: 'Departed',
-    cancelled: 'Cancelled',
+    closed: 'Boarding closed',
   };
 
   F.PILLS = { auto: 'Auto', ontime: 'On Time', delayed: 'Delayed', cancelled: 'Cancelled' };
@@ -256,9 +254,8 @@ window.FIDS = window.FIDS || {};
     let phase = b.phase, group = Math.max(0, Math.min(F.LAST_GROUP, +b.group || 0));
     if (phase === 'auto' && isFinite(depT)) {
       const every = Math.max(1, +b.groupEveryMin || 4) * 60000;
-      if (pill === 'cancelled') phase = 'cancelled';
-      else if (/departed|enroute|arrived|approaching/.test(api) || now >= depT + 2 * 60000) phase = 'departed';
-      else if (now >= depT - (+b.closeMin || 0) * 60000) phase = 'closed';
+      if (pill === 'cancelled' || /departed|enroute|arrived|approaching/.test(api) ||
+          now >= depT - (+b.closeMin || 0) * 60000) phase = 'closed';
       else if (now >= boardT) {
         const i = Math.floor((now - boardT) / every);
         if (i > F.LAST_GROUP) phase = 'final';
@@ -267,7 +264,7 @@ window.FIDS = window.FIDS || {};
       else if (minsToBoard <= (+b.countdownMin || 0)) phase = 'countdown';
       else phase = 'promo';
     } else if (phase === 'auto') phase = 'promo';
-    if (b.pill === 'cancelled') phase = 'cancelled';
+    if (b.pill === 'cancelled' || !F.PHASES[phase]) phase = 'closed';   // also maps old saved "departed"/"cancelled"
 
     return { phase, group, pill, delayMin, depLocal, boardLocal, minsToBoard };
   };
