@@ -48,7 +48,7 @@ html, body {
 .brand { display: flex; align-items: center; gap: 18px; padding: 0 44px; }
 .brand img { height: 64px; }
 .brand img.ua { height: 50px; }
-.brand img.sa { height: 66px; }
+.brand img.sa { height: 60px; }
 .brand .sep { width: 2px; height: 50px; background: #fff; opacity: .8; }
 .gate {
   align-self: stretch; display: flex; align-items: center;
