@@ -46,6 +46,10 @@ counts. Click it again to refresh. Nothing to install, and it works from the Git
 
 The data only moves between your own browser tabs. Upgrade/standby names (surname + initial, as United shows them publicly)
 stay in your browser's storage, are never committed, and are left out of "Copy link for another device" snapshots.
+**Finding a flight without any API key:** open your airport's departures on FlightView and click the bookmark. The control
+page then lists every departure (flight number, destination, gate, time) as a picker, with a filter box. Pick one and it
+becomes the current flight, with the united.com link built for it; click the bookmark there for everything else.
+
 **Next departure from the gate:** United's data doesn't include it, so the control page links to the airport's
 departures on [FlightView](https://www.flightview.com/). Click the same bookmark there: it reads FlightView's departures
 (with gates) and picks the next flight from your gate. AeroDataBox can also be used, but its free data often has no gates.

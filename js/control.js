@@ -243,6 +243,42 @@
     a.textContent = ap.length === 3 ? ap + ' departures on FlightView' : 'departures on FlightView';
   }
 
+  // ---- FlightView departure picker (no API key needed: comes from the bookmark on FlightView) ----
+  function fvData() {
+    if (F.lastFlightView) return F.lastFlightView;
+    try { return JSON.parse(sessionStorage.getItem('fids.fv') || 'null'); } catch (e) { return null; }
+  }
+  function renderPicker() {
+    const d = fvData();
+    $('fvPick').hidden = !d;
+    if (!d) return;
+    const q = $('fvFilter').value.trim().toUpperCase();
+    const mine = $('fvMine').checked, air = (state.flight.airline || 'UA').toUpperCase();
+    const now = F.airportNow(state.flight.utcOffsetMin).toISOString().slice(11, 16);
+    const rows = d.departures
+      .map((x, i) => ({ ...x, i }))
+      .filter((x) => (!mine || x.al === air) && (!q || [x.al + x.no, x.gate, x.to, x.toName].join(' ').toUpperCase().includes(q)))
+      .sort((a, b) => (a.upd || a.sch).localeCompare(b.upd || b.sch));
+    $('fvPickTitle').textContent = d.airport + ' departures (FlightView)';
+    $('fvList').innerHTML = '<table><thead><tr><th>Flight</th><th>To</th><th>Gate</th><th>Departs</th><th>Status</th><th></th></tr></thead><tbody>' +
+      rows.map((x) => '<tr class="' + ((x.upd || x.sch) < now ? 'past' : '') + '"><td>' + esc(x.al + x.no) + '</td><td>' + esc(x.toName || x.to) +
+        ' (' + esc(x.to) + ')</td><td>' + esc(x.gate || '--') + '</td><td>' + F.fmtTime(x.date + 'T' + (x.upd || x.sch), state.display.clock24) +
+        '</td><td>' + esc(x.st || '') + '</td><td><button data-fv="' + x.i + '">Use</button></td></tr>').join('') +
+      '</tbody></table>';
+  }
+  $('fvFilter').addEventListener('input', renderPicker);
+  $('fvMine').addEventListener('change', renderPicker);
+  $('fvList').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-fv]');
+    const d = fvData();
+    if (!b || !d) return;
+    const dep = d.departures[+b.dataset.fv];
+    F.useFlightViewDeparture(state, dep, d.airport);
+    commit(); fillForm(); renderPicker();
+    unitedMsg('Showing ' + dep.al + dep.no + ' to ' + state.flight.destLabel + (dep.gate ? ' from gate ' + dep.gate : '') +
+      '. Open the united.com link above and click the bookmark there for times, amenities and the lists.');
+  });
+
   // ---- United bookmarklet ----
   function unitedMsg(t, err) { $('unitedMsg').textContent = t; $('unitedMsg').className = 'msg' + (err ? ' err' : ''); }
   const bm = $('bookmarklet');
@@ -286,7 +322,11 @@
           ' · ' + state.upgrades.list.length + ' on upgrade list, ' + state.standby.list.length + ' on standby.');
       }
       const fv = F.importFlightViewFromHash(state);
-      if (fv) { imported = true; commit(); fillForm(); unitedMsg(fv.msg, !fv.ok); }
+      if (fv) {
+        imported = true;
+        try { sessionStorage.setItem('fids.fv', JSON.stringify(F.lastFlightView)); } catch (err) {}
+        commit(); fillForm(); renderPicker(); unitedMsg(fv.msg, !fv.ok && !fv.picker);
+      }
     } catch (e) {
       unitedMsg('Could not read the imported data: ' + e.message, true);
     }
@@ -294,6 +334,7 @@
   }
   window.addEventListener('hashchange', () => runImports(false));
   runImports(true);
+  renderPicker();
 
   // Auto-refresh from the control page too (a shared lock stops the display double-fetching).
   setInterval(async () => {

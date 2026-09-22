@@ -93,13 +93,32 @@ window.FIDS = window.FIDS || {};
     return data;
   };
 
+  // Pick a FlightView departure as the flight to show (then the United bookmark fills in the rest).
+  F.useFlightViewDeparture = function (s, dep, airport) {
+    const f = s.flight;
+    const incoming = { airline: dep.al, number: String(dep.no), sched: dep.date + 'T' + dep.sch, originCode: airport };
+    if (F.flightKey(incoming) !== F.flightKey(f)) F.resetFlightData(s);
+    f.airline = dep.al;
+    f.number = String(dep.no);
+    f.originCode = airport;
+    f.destCode = dep.to;
+    f.destLabel = F.airportLabel(dep.to, dep.toName);
+    f.sched = dep.date + 'T' + dep.sch;
+    f.est = dep.upd && dep.upd !== dep.sch ? dep.date + 'T' + dep.upd : '';
+    f.gate = dep.gate || '';
+    f.apiStatus = /delay/i.test(dep.st) ? 'Delayed' : dep.st || '';
+    f.lock = false;
+  };
+
   // Control page: "#fv=..." from FlightView. Sets the next departure from this gate; returns { msg, ok }, or null.
   F.importFlightViewFromHash = function (s) {
     const d = fromHash('fv');
     if (!d) return null;
+    F.lastFlightView = d;                       // the control page offers these as a flight picker
     const f = s.flight;
     if (d.airport !== (f.originCode || '').toUpperCase()) {
-      return { ok: false, msg: 'Those are ' + d.airport + ' departures, but this flight leaves from ' + (f.originCode || '?') + '.' };
+      return { ok: false, picker: true, msg: 'Loaded ' + d.departures.length + ' departures from ' + d.airport +
+        '. This flight leaves from ' + (f.originCode || '?') + ', so pick one below to switch.' };
     }
     const deps = d.departures.map((x) => ({ ...x, t: x.date + 'T' + (x.upd || x.sch) }));
     const self = deps.find((x) => x.al === f.airline && String(x.no) === String(f.number));
@@ -108,10 +127,10 @@ window.FIDS = window.FIDS || {};
     const dep = f.est || f.sched;
     const next = deps.filter((x) => x.al === f.airline && F.sameGate(x.gate, f.gate) && x.t > dep && String(x.no) !== String(f.number))
       .sort((a, b) => a.t.localeCompare(b.t))[0];
-    if (!next) return { ok: false, msg: 'FlightView lists no later ' + f.airline + ' departure from gate ' + f.gate + ' today.' };
+    if (!next) return { ok: false, picker: true, msg: 'FlightView lists no later ' + f.airline + ' departure from gate ' + f.gate + ' today.' };
     s.next = { dest: F.airportLabel(next.to, next.toName), flight: next.al + next.no, time: next.t,
                status: /delay/i.test(next.st) ? 'Delayed' : 'On Time' };
-    return { ok: true, msg: 'Next departure from gate ' + f.gate + ': ' + next.al + next.no + ' to ' + s.next.dest + ' at ' + F.fmtTime(next.t) + ' (FlightView).' };
+    return { ok: true, picker: true, msg: 'Next departure from gate ' + f.gate + ': ' + next.al + next.no + ' to ' + s.next.dest + ' at ' + F.fmtTime(next.t) + ' (FlightView).' };
   };
 
   const hhmm = (t) => (t || '').slice(0, 16);                          // "2026-09-22T10:59:00" -> local wall clock

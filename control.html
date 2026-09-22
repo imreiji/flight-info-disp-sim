@@ -100,6 +100,14 @@
       <p class="muted">Click it again any time to refresh. The data goes straight from your united.com tab to this page in your browser; passenger names are never uploaded and are left out of shared snapshot links.
         <a href="status.html" target="_blank" rel="noopener">Open flight status page &rarr;</a></p>
       <div class="row"><span id="unitedMsg" class="msg"></span></div>
+      <div id="fvPick" hidden>
+        <div class="row">
+          <label class="inline"><b id="fvPickTitle"></b></label>
+          <input id="fvFilter" placeholder="Filter by gate, flight or destination" class="grow">
+          <label class="inline"><input type="checkbox" id="fvMine" checked> This airline only</label>
+        </div>
+        <div class="results" id="fvList"></div>
+      </div>
     </section>
 
     <!-- ================= FLIGHT DETAILS ================= -->
