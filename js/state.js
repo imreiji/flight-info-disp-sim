@@ -124,6 +124,7 @@ window.FIDS = window.FIDS || {};
         promoApp: true,
         promoWifi: true,
         promoPass: true,
+        seatedSlide: false,      // "Groups 3-6 have a seat" slide during groups 1-2 (off until it matches the real screens)
         wifiMember: '$8',
         wifiNonMember: '$10',
       },

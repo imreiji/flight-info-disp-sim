@@ -190,7 +190,7 @@
         const g = d.group;
         if (g === 0) { html = preboardSlide(); break; }
         // While groups 1 and 2 board, alternate with the "Groups 3-6 have a seat" view.
-        if ((g === 1 || g === 2) && slot(sec, 2) === 1) {
+        if (s.display.seatedSlide && (g === 1 || g === 2) && slot(sec, 2) === 1) {
           html = '<div class="rp seatview"><div class="bar"></div><div class="center"><div class="big">Groups 3-' + F.LAST_GROUP +
             '</div><div class="sub">Have a seat until<br>your group is called</div>' + F.seated + '</div><div class="bar"></div></div>';
         } else {
