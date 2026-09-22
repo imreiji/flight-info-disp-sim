@@ -84,7 +84,7 @@ window.FIDS = window.FIDS || {};
     },
   };
 
-  // The next United departure from the same gate after the current flight, from a departures list.
+  // The next departure (same airline) from the same gate after the current flight, from a departures list.
   F.pickNext = function (s, list) {
     const f = s.flight, dep = f.est || f.sched;
     const gate = (f.gate || '').toUpperCase();
@@ -110,7 +110,7 @@ window.FIDS = window.FIDS || {};
     F.applyFlight(s, leg);
     if (src.lookupNext && s.flight.gate && s.flight.originCode) {
       const dep = s.flight.est || s.flight.sched;
-      const list = await F.api.byAirport(key, s.flight.originCode, dep, F.shiftLocal(dep, 11 * 60), { airline: 'UA' });
+      const list = await F.api.byAirport(key, s.flight.originCode, dep, F.shiftLocal(dep, 11 * 60), { airline: s.flight.airline });
       F.applyNext(s, F.pickNext(s, list));
     }
     return s;

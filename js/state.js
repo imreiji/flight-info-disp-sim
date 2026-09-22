@@ -4,9 +4,9 @@
 window.FIDS = window.FIDS || {};
 
 (function (F) {
-  const STORAGE_KEY = 'uafids.state.v2';
-  const KEY_STORAGE = 'uafids.apikey';
-  const FETCH_LOCK = 'uafids.lastFetch';
+  const STORAGE_KEY = 'fids.state.v2';
+  const KEY_STORAGE = 'fids.apikey';
+  const FETCH_LOCK = 'fids.lastFetch';
 
   // United boarding order. Index 0 is pre-boarding.
   F.GROUPS = ['Pre-boarding', 'Group 1', 'Group 2', 'Group 3', 'Group 4', 'Group 5', 'Group 6'];
@@ -38,6 +38,7 @@ window.FIDS = window.FIDS || {};
       version: 2,
       source: {
         mode: 'flight',          // 'flight' | 'airport' | 'manual'
+        airline: 'UA',           // IATA code used to filter airport departures
         flight: 'UA5220',
         date: new Date(Date.now() + offset * 60000).toISOString().slice(0, 10),
         airport: 'SFO',

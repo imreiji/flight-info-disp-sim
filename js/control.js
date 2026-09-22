@@ -195,14 +195,14 @@
       } else {
         const ap = src.airport.toUpperCase();
         const off = state.flight.originCode === ap ? state.flight.utcOffsetMin : -new Date().getTimezoneOffset();
-        const all = await F.api.byAirport(key, ap, localStamp(off, -30), localStamp(off, 690), { airline: 'UA' });
+        const all = await F.api.byAirport(key, ap, localStamp(off, -30), localStamp(off, 690), { airline: src.airline });
         let list = all;
         if (src.gate) list = list.filter((n) => n.gate.toUpperCase() === src.gate.toUpperCase());
         if (src.dest) list = list.filter((n) => n.destCode.toUpperCase() === src.dest.toUpperCase());
         showResults(list);
         const next = list.find((f) => !/departed|canceled|cancelled|enroute|arrived/i.test(f.apiStatus));
         if (next) pick(next, all);
-        else msg(list.length ? 'No upcoming flights, pick one below.' : 'No matching United departures in the next 12 hours.', !list.length);
+        else msg(list.length ? 'No upcoming flights, pick one below.' : 'No matching ' + (src.airline || '') + ' departures in the next 12 hours.', !list.length);
       }
     } catch (e) {
       msg(e.message, true);
@@ -219,7 +219,7 @@
   }, 30000);
 
   // ---- top bar ----
-  $('openDisplay').onclick = () => window.open('index.html', 'uafids-display');
+  $('openDisplay').onclick = () => window.open('index.html', 'fids-display');
   $('copyLink').onclick = async () => {
     const withKey = F.getKey() && confirm('Include your API key in the link so that device can auto-refresh?\n\nOnly do this for devices you trust.');
     const url = new URL('index.html', location.href);

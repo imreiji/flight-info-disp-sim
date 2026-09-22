@@ -26,7 +26,7 @@ Then open `https://<user>.github.io/<repo>/control.html`.
 Flight data comes from [AeroDataBox](https://rapidapi.com/aedbx-aedbx/api/aerodatabox) on RapidAPI, called directly from the browser. Subscribe to the free tier and paste your RapidAPI key into the control page. The key is stored only in your browser's localStorage and is never committed.
 
 - **By flight number:** looks up a flight number and date. For multi-leg flights, set the origin airport.
-- **By airport / gate:** lists United departures from an airport for the next ~12 hours, optionally filtered by gate or destination, and shows the next one.
+- **By airport / gate:** lists one airline's departures (default `UA`) from an airport for the next ~12 hours, optionally filtered by gate or destination, and shows the next one.
 - **Manual only:** no API calls; you type everything in.
 
 Auto-refresh re-pulls the selected flight every N minutes. If both the control page and the display are open, only one of them makes each request. Tick **Freeze details** to stop a refresh from overwriting your manual edits. The quick-delay buttons tick it for you.
